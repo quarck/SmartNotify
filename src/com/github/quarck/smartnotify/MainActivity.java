@@ -2,6 +2,7 @@
 
 package com.github.quarck.smartnotify;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
@@ -12,7 +13,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
 import android.os.Build;
 
 public class MainActivity extends Activity 
@@ -26,7 +30,7 @@ public class MainActivity extends Activity
         if (savedInstanceState == null) 
         {
             getFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, new MainFragment())
                     .commit();
         }
     }
@@ -57,19 +61,85 @@ public class MainActivity extends Activity
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment 
+
+	public static class MainFragment 
+		extends Fragment 
+		implements ServiceClient.Callback
     {
-
-        public PlaceholderFragment() 
-        {
+    	ServiceClient serviceClient = null;
+    	        
+        public void checkService() 
+        {        
+        	serviceClient.getListNotifications();
         }
-
+        
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) 
-        {        	
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        {
+        	View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+            
+        	((Button)rootView.findViewById(R.id.buttonCheckService)).setOnClickListener(
+    			new OnClickListener()
+    			{
+					public void onClick(View arg0) 
+					{
+			        	checkService();
+					}
+    				
+    			}
+    		);
+        	
+        	final ServiceClient.Callback cb = this;
+        	
+        	((Button)rootView.findViewById(R.id.buttonConfigure)).setOnClickListener(
+        			new OnClickListener()
+        			{
+    					public void onClick(View arg0) 
+    					{
+    			        	Context ctx = getActivity().getApplicationContext();
+    			        	serviceClient = new ServiceClient(cb);
+
+    			        	serviceClient.bindService(ctx);
+    					}
+        				
+        			}
+        		);
+       
             return rootView;
         }
+
+        public void onStart()
+        {
+        	super.onStart();
+        	//Context ctx = getActivity().getApplicationContext();
+        	//serviceClient = new ServiceClient();
+
+        	//serviceClient.bindService(ctx);
+        }
+        
+        public void onStop()
+        {
+        	Context ctx = getActivity().getApplicationContext();
+        	serviceClient.unbindService(ctx);
+        	
+        	super.onStop();	
+        }
+
+		@Override
+		public void onNotificationList(String[] notifications) 
+		{
+        	StringBuilder sb = new StringBuilder();
+        	
+        	if (notifications != null)
+	        	for(String ntf: notifications)
+	        	{
+	        		sb.append(ntf);
+	        		sb.append("\n");
+	        	}
+        	
+    		Toast.makeText(getActivity(), sb.toString(), Toast.LENGTH_LONG).show();
+			
+		}
     }
 }
