@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.view.LayoutInflater;
@@ -90,17 +91,13 @@ public class MainActivity extends Activity
     			}
     		);
         	
-        	final ServiceClient.Callback cb = this;
-        	
         	((Button)rootView.findViewById(R.id.buttonConfigure)).setOnClickListener(
         			new OnClickListener()
         			{
     					public void onClick(View arg0) 
     					{
-    			        	Context ctx = getActivity().getApplicationContext();
-    			        	serviceClient = new ServiceClient(cb);
-
-    			        	serviceClient.bindService(ctx);
+    						Intent intent=new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+    						startActivity(intent);
     					}
         				
         			}
@@ -112,10 +109,11 @@ public class MainActivity extends Activity
         public void onStart()
         {
         	super.onStart();
-        	//Context ctx = getActivity().getApplicationContext();
-        	//serviceClient = new ServiceClient();
 
-        	//serviceClient.bindService(ctx);
+        	Context ctx = getActivity().getApplicationContext();
+        	serviceClient = new ServiceClient(this);
+
+        	serviceClient.bindService(ctx);
         }
         
         public void onStop()
