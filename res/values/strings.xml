@@ -4,5 +4,7 @@
     <string name="app_name">Smart Notify</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-
+	<string name="application_has_no_access">This application needs special permissions to be able to access list of notifications. Open Settings app to grant such access?</string>
+	<string name="open_settings">Open Settings</string>
+	<string name="cancel_quit">Cancel(Quit)</string>
 </resources>

@@ -27,10 +27,9 @@ public class NotifyService
 
 	ArrayList<Messenger> mClients = new ArrayList<Messenger>();
     
-    static final int MSG_REGISTER_CLIENT = 1;
-    static final int MSG_UNREGISTER_CLIENT = 2;
-    static final int MSG_SET_VALUE = 3;
-    static final int MSG_LIST_NOTIFICATIONS = 4;
+    static final int MSG_CHECK_PERMISSIONS = 1;
+    static final int MSG_NO_PERMISSIONS = 2;
+    static final int MSG_LIST_NOTIFICATIONS = 3;
 
     @Override
     public boolean handleMessage(Message msg) 
@@ -39,12 +38,27 @@ public class NotifyService
     	
         switch (msg.what) 
         {
-            case MSG_REGISTER_CLIENT:
-                mClients.add(msg.replyTo);
+            case MSG_CHECK_PERMISSIONS:
+
+            	try
+            	{
+            		getActiveNotifications();
+            	}           		
+            	catch(NullPointerException ex)
+            	{
+    				try 
+    				{
+    					msg.replyTo.send(Message.obtain(null, MSG_NO_PERMISSIONS, 0, 0));
+    				} 
+    				catch (RemoteException e) 
+    				{
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}             		
+            	}
+            	
                 break;
-            case MSG_UNREGISTER_CLIENT:
-                mClients.remove(msg.replyTo);
-                break;
+
             case MSG_LIST_NOTIFICATIONS: 
  
             	StatusBarNotification[] notifications = getActiveNotifications ();
@@ -67,20 +81,6 @@ public class NotifyService
 				ret = true;
         		
             	break;
-            case MSG_SET_VALUE:
-//                   mValue = msg.arg1;
-                for (int i=mClients.size()-1; i>=0; i--) 
-                {
-//                    try 
- //                   {
-//                         mClients.get(i).send(Message.obtain(null, MSG_SET_VALUE, mValue, 0));
-   //                 } 
-     //               catch (RemoteException e) 
-       //             {
-         //               mClients.remove(i);
-           //         }
-                }
-                break;
         }
 		return ret;
     }

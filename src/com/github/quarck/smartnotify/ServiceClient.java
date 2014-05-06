@@ -22,6 +22,12 @@ public class ServiceClient implements Handler.Callback
 
 	interface Callback
 	{
+		abstract void onNoPermissions();
+		
+		abstract void onConnected();
+		
+		abstract void onDisconnected();
+		
 		abstract void onNotificationList(String[] notificationList);
 	}
 	
@@ -42,6 +48,10 @@ public class ServiceClient implements Handler.Callback
         		if (callback != null)
         			callback.onNotificationList((String[]) msg.obj);
         		break;
+        	case NotifyService.MSG_NO_PERMISSIONS:
+        		if (callback != null)
+        			callback.onNoPermissions();
+        		break;
         }
         
         return true;
@@ -50,43 +60,20 @@ public class ServiceClient implements Handler.Callback
 	private ServiceConnection mConnection = 
 			new ServiceConnection() 
 			{
-			    public void onServiceConnected(ComponentName className, IBinder service) {
-			        // This is called when the connection with the service has been
-			        // established, giving us the service object we can use to
-			        // interact with the service.  We are communicating with our
-			        // service through an IDL interface, so get a client-side
-			        // representation of that from the raw service object.
+			    public void onServiceConnected(ComponentName className, IBinder service) 
+			    {
 			        mService = new Messenger(service);
-		//	        mCallbackText.setText("Attached.");
-		
-			        // We want to monitor the service for as long as we are
-			        // connected to it.
-			        //try 
-			        //{
-			          //  Message msg = Message.obtain(null, NotifyService.MSG_REGISTER_CLIENT);
-			           // msg.replyTo = mMessenger;
-	//		            mService.send(msg);
-		
-		//	            // Give it some value as an example.
-			//            msg = Message.obtain(null, MessengerService.MSG_SET_VALUE, this.hashCode(), 0);
-			 //           mService.send(msg);
-			       // }
-			        //catch (RemoteException e) 
-			        //{
-			            // In this case the service has crashed before we could even
-			            // do anything with it; we can count on soon being
-			            // disconnected (and then reconnected if it can be restarted)
-			            // so there is no need to do anything here.
-			        //}
-		
-		//	        // As part of the sample, tell the user what happened.
-		//	        Toast.makeText(Binding.this, R.string.remote_service_connected,
-		//	                Toast.LENGTH_SHORT).show();
+			        
+			        if (callback != null)
+			        	callback.onConnected();
 			    }
 		
 			    public void onServiceDisconnected(ComponentName className) 
 			    {
 			        mService = null;
+			        
+			        if (callback != null)
+			        	callback.onDisconnected();
 			    }
 			};
 		
@@ -103,25 +90,12 @@ public class ServiceClient implements Handler.Callback
 	{
 	    if (mIsBound) 
 	    {
-	        if (mService != null) 
-	        {
-	            try 
-	            {
-	                Message msg = Message.obtain(null, NotifyService.MSG_UNREGISTER_CLIENT);
-	                msg.replyTo = mMessenger;
-	                mService.send(msg);
-	            }
-	            catch (RemoteException e) 
-	            {
-	            }
-	        }
-
 	        ctx.unbindService(mConnection);
 	        mIsBound = false;
 	    }
 	}
 
-	public void getListNotifications() 
+	private void sendServiceReq(int code) 
 	{
 	    if (mIsBound) 
 	    {
@@ -129,7 +103,7 @@ public class ServiceClient implements Handler.Callback
 	        {
 	            try 
 	            {
-	                Message msg = Message.obtain(null, NotifyService.MSG_LIST_NOTIFICATIONS);
+	                Message msg = Message.obtain(null, code);
 	                msg.replyTo = mMessenger;
 	                mService.send(msg);
 	            }
@@ -138,5 +112,16 @@ public class ServiceClient implements Handler.Callback
 	            } 
 	        }
 	    }
+	}
+
+	
+	public void getListNotifications() 
+	{
+		sendServiceReq(NotifyService.MSG_LIST_NOTIFICATIONS);
+	}
+
+	public void checkPermissions() 
+	{
+		sendServiceReq(NotifyService.MSG_CHECK_PERMISSIONS);
 	}
 }

@@ -8,35 +8,47 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.github.quarck.smartnotify.MainActivity$PlaceholderFragment" >
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
-
     <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/buttonConfigure"
+        android:layout_alignLeft="@+id/buttonConfigure"
         android:layout_below="@+id/buttonConfigure"
-        android:layout_marginTop="54dp"
+        android:layout_marginTop="26dp"
         android:text="Some Button" />
 
     <Button
         android:id="@+id/buttonCheckService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/buttonConfigure"
-        android:layout_below="@+id/textView1"
+        android:layout_alignLeft="@+id/button2"
+        android:layout_centerVertical="true"
         android:text="CheckService" />
+
+    <CheckBox
+        android:id="@+id/checkBoxEnableService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="Enable Smart Notify" />
 
     <Button
         android:id="@+id/buttonConfigure"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonCheckService"
-        android:layout_toRightOf="@+id/textView1"
+        android:layout_alignLeft="@+id/checkBoxEnableService"
+        android:layout_below="@+id/checkBoxEnableService"
         android:text="Configure" />
+
+    <Button
+        android:id="@+id/button1"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/buttonCheckService"
+        android:layout_below="@+id/buttonCheckService"
+        android:layout_marginTop="24dp"
+        android:text="Button" />
 
 </RelativeLayout>

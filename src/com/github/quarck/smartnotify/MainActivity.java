@@ -5,8 +5,10 @@ package com.github.quarck.smartnotify;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -127,17 +129,59 @@ public class MainActivity extends Activity
 		@Override
 		public void onNotificationList(String[] notifications) 
 		{
-        	StringBuilder sb = new StringBuilder();
-        	
-        	if (notifications != null)
-	        	for(String ntf: notifications)
-	        	{
-	        		sb.append(ntf);
-	        		sb.append("\n");
-	        	}
-        	
-    		Toast.makeText(getActivity(), sb.toString(), Toast.LENGTH_LONG).show();
-			
+			if (notifications != null)
+			{
+	        	StringBuilder sb = new StringBuilder();
+	        	
+	        	if (notifications != null)
+		        	for(String ntf: notifications)
+		        	{
+		        		sb.append(ntf);
+		        		sb.append("\n");
+		        	}
+	        	
+	    		Toast.makeText(getActivity(), sb.toString(), Toast.LENGTH_LONG).show();	
+			}
+			else
+			{
+				onNoPermissions();
+			}
+		}
+
+		@Override
+		public void onConnected() 
+		{
+			serviceClient.checkPermissions();
+		}
+
+		@Override
+		public void onDisconnected() 
+		{
+			// TODO Auto-generated method stu
+		}
+
+		@Override
+		public void onNoPermissions() 
+		{
+			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+	        builder.setMessage(R.string.application_has_no_access)
+	               .setPositiveButton(R.string.open_settings, new DialogInterface.OnClickListener() 
+	               {
+	                   public void onClick(DialogInterface dialog, int id) 
+	                   {
+    						Intent intent=new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+    						startActivity(intent);
+	                   }
+	               })
+	               .setNegativeButton(R.string.cancel_quit, new DialogInterface.OnClickListener() 
+	               {
+	                   public void onClick(DialogInterface dialog, int id) 
+	                   {
+	                       getActivity().finish();
+	                   }
+	               });
+	        // Create the AlertDialog object and return it
+	        builder.create().show();
 		}
     }
 }
