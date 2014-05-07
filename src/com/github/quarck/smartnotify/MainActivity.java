@@ -2,16 +2,13 @@
 
 package com.github.quarck.smartnotify;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Vibrator;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,7 +17,6 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
-import android.os.Build;
 
 public class MainActivity extends Activity 
 {
@@ -69,7 +65,7 @@ public class MainActivity extends Activity
 		extends Fragment 
 		implements ServiceClient.Callback
     {
-    	ServiceClient serviceClient = null;
+    	private ServiceClient serviceClient = null;
     	        
         public void checkService() 
         {        

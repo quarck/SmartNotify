@@ -1,20 +1,13 @@
 package com.github.quarck.smartnotify;
 
-import java.util.ArrayList;
-
-import android.app.Notification;
-import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.widget.Toast;
 
 public class NotifyService 
 	extends NotificationListenerService
@@ -22,14 +15,13 @@ public class NotifyService
 {
 	public final static String configServiceExtra = "configService";
 	
-	boolean alarmIsActive = false;
-	Alarm alarm = new Alarm();
+	private Alarm alarm = new Alarm(this);
 
-	ArrayList<Messenger> mClients = new ArrayList<Messenger>();
+	private final Messenger mMessenger = new Messenger(new Handler(this));
     
-    static final int MSG_CHECK_PERMISSIONS = 1;
-    static final int MSG_NO_PERMISSIONS = 2;
-    static final int MSG_LIST_NOTIFICATIONS = 3;
+    public static final int MSG_CHECK_PERMISSIONS = 1;
+    public static final int MSG_NO_PERMISSIONS = 2;
+    public static final int MSG_LIST_NOTIFICATIONS = 3;
 
     @Override
     public boolean handleMessage(Message msg) 
@@ -39,54 +31,58 @@ public class NotifyService
         switch (msg.what) 
         {
             case MSG_CHECK_PERMISSIONS:
-
-            	try
-            	{
-            		getActiveNotifications();
-            	}           		
-            	catch(NullPointerException ex)
-            	{
-    				try 
-    				{
-    					msg.replyTo.send(Message.obtain(null, MSG_NO_PERMISSIONS, 0, 0));
-    				} 
-    				catch (RemoteException e) 
-    				{
-    					// TODO Auto-generated catch block
-    					e.printStackTrace();
-    				}             		
-            	}
-            	
+            	ret = handleCheckPermissions(msg);
                 break;
 
-            case MSG_LIST_NOTIFICATIONS: 
- 
-            	StatusBarNotification[] notifications = getActiveNotifications ();
-        		String[] val = new String[notifications.length];
-        		
-        		int idx = 0;
-        		for(StatusBarNotification ntf: notifications)
-        			val[idx++] = ntf.getPackageName();
-        		
-				try 
-				{
-					msg.replyTo.send(Message.obtain(null, MSG_LIST_NOTIFICATIONS, 0, 0, val));
-				} 
-				catch (RemoteException e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				ret = true;
-        		
-            	break;
+            case MSG_LIST_NOTIFICATIONS:
+            	ret = handleListNotifications(msg);
+             	break;
         }
-		return ret;
+		
+        return ret;
     }
 
-    final Messenger mMessenger = new Messenger(new Handler(this));
+    private boolean handleCheckPermissions(Message msg) 
+    {
+    	try
+    	{
+    		getActiveNotifications();
+    	}           		
+    	catch(NullPointerException ex)
+    	{
+    		reply(msg, Message.obtain(null, MSG_NO_PERMISSIONS, 0, 0));
+    	}
+    	
+    	return true;
+	}
 
+	private boolean handleListNotifications(Message msg) 
+	{
+    	StatusBarNotification[] notifications = getActiveNotifications ();
+		String[] val = new String[notifications.length];
+		
+		int idx = 0;
+		for(StatusBarNotification ntf: notifications)
+			val[idx++] = ntf.getPackageName();
+				
+		reply(msg, Message.obtain(null, MSG_LIST_NOTIFICATIONS, 0, 0, val));
+		
+		return true;
+	}
+
+	
+	private void reply(Message msgIn, Message msgOut)
+	{
+		try 
+		{
+			msgIn.replyTo.send(msgOut);
+		} 
+		catch (RemoteException e) 
+		{
+			e.printStackTrace();
+		}		
+	}
+	
     @Override
     public void onCreate() 
     {
@@ -112,14 +108,12 @@ public class NotifyService
 	{
 		StatusBarNotification[] notifications = this.getActiveNotifications ();
 		
-		if (notifications.length == 0 && alarmIsActive)
+		if (notifications.length == 0 && alarm.IsSet())
 		{
-			alarmIsActive = false;
 			alarm.CancelAlarm(this);
 		}
-		else if (notifications.length != 0 && !alarmIsActive)
+		else if (notifications.length != 0 && !alarm.IsSet())
 		{
-			alarmIsActive = true;
 			alarm.SetAlarm(this, 60);
 		}
 	}
@@ -134,6 +128,16 @@ public class NotifyService
 	public void onNotificationRemoved(StatusBarNotification arg0) 
 	{
 		update();
+	}
+
+	public boolean onAlarmReceived() 
+	{
+		// check for (isServiceEnabled()), 
+		// if false - disable alarm and quit with false retval
+		
+		// TODO Auto-generated method stub
+		
+		return true; // returning false here would disable alarm for this occasion 
 	}
 }
 

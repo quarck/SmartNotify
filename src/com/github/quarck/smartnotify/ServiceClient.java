@@ -1,7 +1,5 @@
 package com.github.quarck.smartnotify;
 
-import java.util.ArrayList;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -14,11 +12,11 @@ import android.os.RemoteException;
 
 public class ServiceClient implements Handler.Callback
 {
-	Messenger mService = null;
+	private Messenger mService = null;
 
-	boolean mIsBound;
+	private boolean mIsBound;
 
-	final Messenger mMessenger = new Messenger(new Handler(this));
+	private final Messenger mMessenger = new Messenger(new Handler(this));
 
 	interface Callback
 	{
@@ -31,7 +29,7 @@ public class ServiceClient implements Handler.Callback
 		abstract void onNotificationList(String[] notificationList);
 	}
 	
-	Callback callback;
+	private Callback callback;
 
 	
 	public ServiceClient(Callback cb)
