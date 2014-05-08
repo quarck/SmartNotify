@@ -1,49 +1,85 @@
 package com.github.quarck.smartnotify;
 
+import java.util.Calendar;
+
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Vibrator;
+import android.util.Log;
 
 public class Alarm extends BroadcastReceiver 
-{   
-	private NotifyService service;
+{
+	public static final String TAG = "Alarm";
 	
-	private int vibrationLengthMillis = 500;
-	private boolean isSet = false;
-
-	public Alarm(NotifyService svc, int _vibrationLenghtMillis)
+	public Alarm()
 	{
 		super();
-		service = svc;
-		vibrationLengthMillis = _vibrationLenghtMillis;
-	}
-
-	public Alarm(NotifyService svc)
-	{
-		this(svc, 500);
 	}
 	
     @Override
     public void onReceive(Context context, Intent intent) // alarm fired 
     {
-    	if (service.onAlarmReceived())
-    	{
-		    Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-		    v.vibrate(vibrationLengthMillis);
-    	}
+		Log.d(TAG, "Alarm received");
+	
+		Settings settings = new Settings(context);
+		
+		if (settings.isServiceEnabled())
+		{
+			boolean fireReminder = true;
+			
+			if (settings.hasSilencePeriod())
+			{
+				Calendar cal = Calendar.getInstance();
+				int hour = cal.get(Calendar.HOUR_OF_DAY);
+				int minute = cal.get(Calendar.MINUTE);
+				int currentTm = hour * 60 + minute;
+				
+				int silenceFrom = settings.getSilenceFrom();
+				int silenceTo = settings.getSilenceTo();
+				
+				if (silenceTo < silenceFrom)
+					silenceTo += 24 * 60;
+				
+				if (silenceFrom <= currentTm && currentTm <= silenceTo)
+				{
+					Log.d(TAG, "Service is enabled, but we are in silent zone, not alarming! CurrentTM: " + currentTm + ", silence from " + silenceFrom + " to " + silenceTo);
+					fireReminder = false;
+				}
+				else
+				{
+					Log.d(TAG, "Service is enabled and not in the silent zone, vibrating");
+				}
+			}
+			else
+			{
+				Log.d(TAG, "Service is enabled, vibrating");
+			}
+
+			if (fireReminder)
+			{
+				Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);				// TODO: XXX: WARNING: CHECK FOR SILENT HOURS!!!
+				v.vibrate(settings.getVibrationPattern(), -1);
+			}
+		}
+		else
+		{
+			Log.d(TAG, "Service is now got disabled, cancelling alarm");
+			CancelAlarm(context);
+		}
     }
 
     public void SetAlarm(Context context, int timeoutSec)
     {
+    	// Cancel any pending alarms, if any
+    	CancelAlarm(context);
+    	
 		Intent intent = new Intent(context, Alarm.class);
 		PendingIntent pendIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 	
 		alarmManager(context).setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 1000 * timeoutSec, pendIntent); 
-    
-		isSet = true;
     }
 
     public void CancelAlarm(Context context)
@@ -52,17 +88,10 @@ public class Alarm extends BroadcastReceiver
 	    PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, 0);
 	    
 	    alarmManager(context).cancel(sender);
-	    
-	    isSet = false;
     }
 
     private AlarmManager alarmManager(Context context)
     {
     	return (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     }
-    
-	public boolean IsSet() 
-	{
-		return isSet;
-	}
 }

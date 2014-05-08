@@ -2,13 +2,19 @@
 
 package com.github.quarck.smartnotify;
 
+import java.util.List;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,6 +22,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.Toast;
 
 public class MainActivity extends Activity 
@@ -65,12 +72,36 @@ public class MainActivity extends Activity
 		extends Fragment 
 		implements ServiceClient.Callback
     {
-    	private ServiceClient serviceClient = null;
+    	protected static final String TAG = "MainFragment";
+		private ServiceClient serviceClient = null;
     	        
         public void checkService() 
         {        
         	serviceClient.getListNotifications();
         }
+		@Override
+		public void onNoPermissions() 
+		{
+			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+	        builder.setMessage(R.string.application_has_no_access)
+	               .setPositiveButton(R.string.open_settings, new DialogInterface.OnClickListener() 
+	               {
+	                   public void onClick(DialogInterface dialog, int id) 
+	                   {
+    						Intent intent=new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+    						startActivity(intent);
+	                   }
+	               })
+	               .setNegativeButton(R.string.cancel_quit, new DialogInterface.OnClickListener() 
+	               {
+	                   public void onClick(DialogInterface dialog, int id) 
+	                   {
+	                       getActivity().finish();
+	                   }
+	               });
+	        // Create the AlertDialog object and return it
+	        builder.create().show();
+		}
         
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -89,18 +120,74 @@ public class MainActivity extends Activity
     			}
     		);
         	
-        	((Button)rootView.findViewById(R.id.buttonConfigure)).setOnClickListener(
+        	final CheckBox cbEnabled =((CheckBox)rootView.findViewById(R.id.checkBoxEnableService)); 
+        	
+        	cbEnabled.setChecked(new Settings(getActivity()).isServiceEnabled());
+        	
+        	cbEnabled.setOnClickListener(
         			new OnClickListener()
         			{
     					public void onClick(View arg0) 
     					{
-    						Intent intent=new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-    						startActivity(intent);
+    						Settings s = new Settings(getActivity());
+    						s.setServiceEnabled(cbEnabled.isChecked());
+    					
+    						if (cbEnabled.isChecked())
+    							serviceClient.checkPermissions();
     					}
-        				
-        			}
-        		);
+        			});
+        	
+        	((Button)rootView.findViewById(R.id.buttonConfigure)).setOnClickListener(
+        			new OnClickListener()
+        			{
+    					public void onClick(View arg0) 
+    					{    						
+//    						final PackageManager pm = getActivity().getPackageManager();
+    						//get a list of installed apps.
+//    						List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+
+  //  						for (ApplicationInfo packageInfo : packages) 
+    //						{
+    	//					    Log.d(TAG, "Installed package :" + packageInfo.packageName);
+    		//				    Log.d(TAG, "Source dir : " + packageInfo.sourceDir);
+    			//			    Log.d(TAG, "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName)); 
+    				//		}
+    						
+    						PackageSettings s = new PackageSettings(getActivity());
+    						
+    						PackageSettings.Package pkg = s.getPackage("com.google.android.calendar"); 
+    						
+    						if (pkg == null)
+    						{
+    							s.addPackage(s.new Package("com.google.android.calendar", true, 60 * 5));
+    						}
+    						else
+    						{
+    							Log.d(TAG, "Updating to send reminders every minute");
+    							pkg.setRemindIntervalSeconds(300);
+    							s.updatePackage(pkg); 
+    						}
+
+    						Log.d(TAG, "Currently known packages: ");
+    						List<PackageSettings.Package> all = s.getAllPackages();
+    						
+    						for(PackageSettings.Package p : all)
+    						{
+    							Log.d(TAG, ">> " + p);
+    						}
+
+    					}
+        			});
        
+        	((Button)rootView.findViewById(R.id.button2)).setOnClickListener(
+        			new OnClickListener()
+        			{
+        				public void onClick(View arg0)
+        				{
+        					Vibrator v = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);				// TODO: XXX: WARNING: CHECK FOR SILENT HOURS!!!
+        					v.vibrate(new Settings(getActivity()).getVibrationPattern(), -1);
+        				}
+        			});
             return rootView;
         }
 
@@ -147,7 +234,7 @@ public class MainActivity extends Activity
 		@Override
 		public void onConnected() 
 		{
-			serviceClient.checkPermissions();
+	//		serviceClient.checkPermissions();
 		}
 
 		@Override
@@ -156,28 +243,5 @@ public class MainActivity extends Activity
 			// TODO Auto-generated method stu
 		}
 
-		@Override
-		public void onNoPermissions() 
-		{
-			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-	        builder.setMessage(R.string.application_has_no_access)
-	               .setPositiveButton(R.string.open_settings, new DialogInterface.OnClickListener() 
-	               {
-	                   public void onClick(DialogInterface dialog, int id) 
-	                   {
-    						Intent intent=new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-    						startActivity(intent);
-	                   }
-	               })
-	               .setNegativeButton(R.string.cancel_quit, new DialogInterface.OnClickListener() 
-	               {
-	                   public void onClick(DialogInterface dialog, int id) 
-	                   {
-	                       getActivity().finish();
-	                   }
-	               });
-	        // Create the AlertDialog object and return it
-	        builder.create().show();
-		}
     }
 }

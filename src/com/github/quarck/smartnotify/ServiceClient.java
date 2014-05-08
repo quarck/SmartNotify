@@ -42,11 +42,11 @@ public class ServiceClient implements Handler.Callback
     {
         switch (msg.what) 
         {
-        	case NotifyService.MSG_LIST_NOTIFICATIONS:
+        	case NotificationReceiverService.MSG_LIST_NOTIFICATIONS:
         		if (callback != null)
         			callback.onNotificationList((String[]) msg.obj);
         		break;
-        	case NotifyService.MSG_NO_PERMISSIONS:
+        	case NotificationReceiverService.MSG_NO_PERMISSIONS:
         		if (callback != null)
         			callback.onNoPermissions();
         		break;
@@ -56,29 +56,29 @@ public class ServiceClient implements Handler.Callback
     }
 
 	private ServiceConnection mConnection = 
-			new ServiceConnection() 
-			{
-			    public void onServiceConnected(ComponentName className, IBinder service) 
-			    {
-			        mService = new Messenger(service);
-			        
-			        if (callback != null)
-			        	callback.onConnected();
-			    }
-		
-			    public void onServiceDisconnected(ComponentName className) 
-			    {
-			        mService = null;
-			        
-			        if (callback != null)
-			        	callback.onDisconnected();
-			    }
-			};
+		new ServiceConnection() 
+		{
+		    public void onServiceConnected(ComponentName className, IBinder service) 
+		    {
+		        mService = new Messenger(service);
+		        
+		        if (callback != null)
+		        	callback.onConnected();
+		    }
+	
+		    public void onServiceDisconnected(ComponentName className) 
+		    {
+		        mService = null;
+		        
+		        if (callback != null)
+		        	callback.onDisconnected();
+		    }
+		};
 		
 	public void bindService(Context ctx) 
 	{
-		Intent it = new Intent(ctx, NotifyService.class);		
-		it.putExtra(NotifyService.configServiceExtra, true);
+		Intent it = new Intent(ctx, NotificationReceiverService.class);		
+		it.putExtra(NotificationReceiverService.configServiceExtra, true);
 		
 	    ctx.bindService(it, mConnection, Context.BIND_AUTO_CREATE);
 	    mIsBound = true;
@@ -111,15 +111,14 @@ public class ServiceClient implements Handler.Callback
 	        }
 	    }
 	}
-
 	
 	public void getListNotifications() 
 	{
-		sendServiceReq(NotifyService.MSG_LIST_NOTIFICATIONS);
+		sendServiceReq(NotificationReceiverService.MSG_LIST_NOTIFICATIONS);
 	}
 
 	public void checkPermissions() 
 	{
-		sendServiceReq(NotifyService.MSG_CHECK_PERMISSIONS);
+		sendServiceReq(NotificationReceiverService.MSG_CHECK_PERMISSIONS);
 	}
 }

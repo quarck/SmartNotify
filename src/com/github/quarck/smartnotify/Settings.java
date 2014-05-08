@@ -11,10 +11,13 @@ public class Settings
 	
 	private static final String IS_ENABLED_KEY ="IsEnabled";
 	private static final String REMIND_INTERVAL_KEY = "RemindIntervalSec";
-	private static final String VIBRATION_LENGTH_KEY = "VibrationLengthMSec";
+	private static final String VIBRATION_PATTERN_KEY = "VibrationPattern";
+	
+	private static final String SILENT_FROM_KEY = "SilentStart"; // number of minutes since 00:00:00
+	private static final String SILENT_TO_KEY = "SilentEnd";
 	
 	private SharedPreferences prefs = null;
-	
+		
 	public Settings(Context ctx)
 	{
 		context = ctx;
@@ -32,6 +35,29 @@ public class Settings
 	{
 		return prefs.getBoolean(IS_ENABLED_KEY, false);		
 	}
+	
+	public void setSilencePeriod(int from, int to)
+	{
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putInt(SILENT_FROM_KEY, from);
+		editor.putInt(SILENT_TO_KEY, to);
+		editor.commit();
+	}
+	
+	public int getSilenceFrom()
+	{
+		return prefs.getInt(SILENT_FROM_KEY, 0);
+	}
+
+	public int getSilenceTo()
+	{
+		return prefs.getInt(SILENT_TO_KEY, 0);
+	}
+	
+	public boolean hasSilencePeriod()
+	{
+		return getSilenceFrom() != getSilenceTo();
+	}
 
 	public void setRemindIntervalSeconds(int value)
 	{
@@ -45,15 +71,45 @@ public class Settings
 		return prefs.getInt(REMIND_INTERVAL_KEY, 600);		
 	}
 
-	public void setVibrationLengthMilliseconds(int value)
+	public void setVibrationPattern(long[] pattern)
 	{
 		SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt(VIBRATION_LENGTH_KEY, value);
+		StringBuilder sb = new StringBuilder();
+		
+		boolean isFirst = true;
+		for(long len : pattern)
+		{
+			if (!isFirst)
+				sb.append(",");
+			sb.append(len);
+			isFirst = false;
+		}
+		
+        editor.putString(VIBRATION_PATTERN_KEY, sb.toString());
         editor.commit();		
 	}
 	
-	public int getVibrationLengthMilliseconds()
+	public long[] getVibrationPattern()
 	{
-		return prefs.getInt(VIBRATION_LENGTH_KEY, 600);		
+		try
+		{
+			String patternStr = prefs.getString(VIBRATION_PATTERN_KEY, "0,1200,150,100,50,100,50,100");
+	
+			String[] times = patternStr.split(",");
+			
+			long[] pattern = new long[times.length];
+	
+			for (int idx = 0; idx < times.length; ++ idx)
+			{
+				pattern[idx] = Long.parseLong(times[idx]);
+			}
+	
+			return pattern;
+		}
+		catch (Exception ex)
+		{
+		}
+		
+		return new long[]{0,1500}; // very-very failback for the case when we've failed
 	}
 }

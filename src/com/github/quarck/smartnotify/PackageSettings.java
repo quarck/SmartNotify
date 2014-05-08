@@ -10,14 +10,16 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-public class PerPackageSettings extends SQLiteOpenHelper 
+public class PackageSettings extends SQLiteOpenHelper 
 {
+	private static final String TAG = "DB";
+	
 	public class Package 
 	{		 
-	    private int id;
-	    // Java boilerplate  
-	    public int getId() { return id; }
-	    public void setId(int newId) { id = newId; }
+//	    private int id;
+//	    // Java boilerplate  
+//	    public int getId() { return id; }
+//	    public void setId(int newId) { id = newId; }
 	    
 	    private String packageName;
 	    // Java boilerplate  
@@ -47,49 +49,58 @@ public class PerPackageSettings extends SQLiteOpenHelper
 	    @Override
 	    public String toString() 
 	    {
-	        return "Package [id=" + id + ", package=" + packageName + ", handle=" +
+	        return "Package [package=" + packageName + ", handle=" +
 	        		handleThisPackage + ", interval=" + remindIntervalSeconds + "]";
 	    }
 	}
-	private static final int DATABASE_VERSION = 1;
+	private static final int DATABASE_VERSION = 2;
     
-	private static final String DATABASE_NAME = "PackageSettingsDB";
+	private static final String DATABASE_NAME = "Packages";
  
     private static final String TABLE_NAME = "packages";
+    private static final String INDEX_NAME = "pkgidx";
 
-    private static final String KEY_ID = "id";
+//    private static final String KEY_ID = "id";
     private static final String KEY_PACKAGE = "package";
     private static final String KEY_HANDLE = "handle";
     private static final String KEY_INTERVAL = "interval";
 
-    private final String[] COLUMNS = {KEY_ID,KEY_PACKAGE,KEY_HANDLE,KEY_INTERVAL};
+    private final String[] COLUMNS = {KEY_PACKAGE,KEY_HANDLE,KEY_INTERVAL};
     
-    public PerPackageSettings(Context context) 
+    public PackageSettings(Context context) 
     {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);  
     }
  
     @Override
-    public void onCreate(SQLiteDatabase db) {
+    public void onCreate(SQLiteDatabase db) 
+    {
+    	Log.d(TAG, "DB CREATED");
         String CREATE_PKG_TABLE = "CREATE TABLE " + TABLE_NAME + " ( " +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " + 
-                KEY_PACKAGE + " TEXT, "+
+                //"id INTEGER PRIMARY KEY AUTOINCREMENT, " + 
+                KEY_PACKAGE + " TEXT PRIMARY KEY, "+
                 KEY_HANDLE + " INTEGER, "+
                 KEY_INTERVAL + " INTEGER )";
+        
+        Log.d(TAG, "Creation query: " + CREATE_PKG_TABLE);
 
         db.execSQL(CREATE_PKG_TABLE);
+        
+        String CREATE_INDEX = "CREATE UNIQUE INDEX " + INDEX_NAME + " ON "+ TABLE_NAME +" (" + KEY_PACKAGE + ")";
+        db.execSQL(CREATE_INDEX);
     }
  
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) 
     {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+        db.execSQL("DROP INDEX IF EXISTS " + INDEX_NAME);
         this.onCreate(db);
     }	 
     
     public void addPackage(Package pkg)
     {
-	    Log.d("addPackage", pkg.toString()); 
+	    Log.d(TAG, "addPackage " + pkg.toString()); 
 	
 	    SQLiteDatabase db = this.getWritableDatabase();
 
@@ -105,37 +116,42 @@ public class PerPackageSettings extends SQLiteOpenHelper
 	    db.close(); 
 	}
     
-    
-    public Package getPackage(int id)
+    public Package getPackage(String packageId)
     {
-
         SQLiteDatabase db = this.getReadableDatabase();
      
+        Log.d(TAG, "getPackage" + packageId);
+        
         Cursor cursor = 
                 db.query(TABLE_NAME, // a. table
                 COLUMNS, // b. column names
-                " id = ?", // c. selections 
-                new String[] { String.valueOf(id) }, // d. selections args
+                " " + KEY_PACKAGE + " = ?", // c. selections 
+                new String[] { packageId }, // d. selections args
                 null, // e. group by
-                null, // f. having
+                null, // f. h aving
                 null, // g. order by
                 null); // h. limit
-     
-        if (cursor != null)
-            cursor.moveToFirst();
-     
-        Package pkg = 
-        		new Package(
-        				cursor.getString(1),
-        				Integer.parseInt(cursor.getString(2))!=0,
-						Integer.parseInt(cursor.getString(3))
-        			);
-        pkg.setId(Integer.parseInt(cursor.getString(0)));
 
-        Log.d("getPackage("+id+")", pkg.toString());
-     
+        Package pkg = null;
+        
+        if (cursor != null && cursor.getCount() >= 1)
+        {
+            cursor.moveToFirst();
+        
+        	pkg = new Package(
+        				cursor.getString(0),
+        				Integer.parseInt(cursor.getString(1))!=0,
+						Integer.parseInt(cursor.getString(2))
+        			);
+        	
+//        	pkg.setId(Integer.parseInt(cursor.getString(0)));
+
+        	Log.d("getPackage("+packageId+")", pkg.toString());
+        }
+
         return pkg;
     }
+
     
     public List<Package> getAllPackages() 
     {
@@ -152,11 +168,10 @@ public class PerPackageSettings extends SQLiteOpenHelper
             do {
     	        pkg = 
 	        		new Package(
-	        				cursor.getString(1),
-	        				Integer.parseInt(cursor.getString(2))!=0,
-    						Integer.parseInt(cursor.getString(3))
+	        				cursor.getString(0),
+	        				Integer.parseInt(cursor.getString(1))!=0,
+    						Integer.parseInt(cursor.getString(2))
 	        			);
-    	        pkg.setId(Integer.parseInt(cursor.getString(0)));
   
                 packages.add(pkg);
             } while (cursor.moveToNext());
@@ -172,14 +187,14 @@ public class PerPackageSettings extends SQLiteOpenHelper
         SQLiteDatabase db = this.getWritableDatabase();
      
 	    ContentValues values = new ContentValues();
-	    values.put(KEY_PACKAGE, pkg.getPackageName());  
+//	    values.put(KEY_PACKAGE, pkg.getPackageName());  
 	    values.put(KEY_HANDLE, pkg.isHandlingThis()); 
 	    values.put(KEY_INTERVAL, pkg.getRemindIntervalSeconds());
      
         int i = db.update(TABLE_NAME, //table
                 values, // column/value
-                KEY_ID+" = ?", // selections
-                new String[] { String.valueOf(pkg.getId()) }); //selection args
+                KEY_PACKAGE+" = ?", // selections
+                new String[] { pkg.getPackageName() }); //selection args
      
         db.close();
      
@@ -192,8 +207,8 @@ public class PerPackageSettings extends SQLiteOpenHelper
         SQLiteDatabase db = this.getWritableDatabase();
  
         db.delete(TABLE_NAME, //table name
-                KEY_ID+" = ?",  // selections
-                new String[] { String.valueOf(pkg.getId()) }); //selections args
+                KEY_PACKAGE+" = ?",  // selections
+                new String[] { pkg.getPackageName() }); //selections args
  
         db.close();
  
