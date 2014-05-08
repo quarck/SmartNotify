@@ -21,103 +21,101 @@ public class ServiceClient implements Handler.Callback
 	interface Callback
 	{
 		abstract void onNoPermissions();
-		
+
 		abstract void onConnected();
-		
+
 		abstract void onDisconnected();
-		
+
 		abstract void onNotificationList(String[] notificationList);
 	}
-	
+
 	private Callback callback;
 
-	
 	public ServiceClient(Callback cb)
 	{
 		callback = cb;
 	}
-	
-    @Override
-    public boolean handleMessage(Message msg) 
-    {
-        switch (msg.what) 
-        {
-        	case NotificationReceiverService.MSG_LIST_NOTIFICATIONS:
-        		if (callback != null)
-        			callback.onNotificationList((String[]) msg.obj);
-        		break;
-        	case NotificationReceiverService.MSG_NO_PERMISSIONS:
-        		if (callback != null)
-        			callback.onNoPermissions();
-        		break;
-        }
-        
-        return true;
-    }
 
-	private ServiceConnection mConnection = 
-		new ServiceConnection() 
+	@Override
+	public boolean handleMessage(Message msg)
+	{
+		switch (msg.what)
 		{
-		    public void onServiceConnected(ComponentName className, IBinder service) 
-		    {
-		        mService = new Messenger(service);
-		        
-		        if (callback != null)
-		        	callback.onConnected();
-		    }
-	
-		    public void onServiceDisconnected(ComponentName className) 
-		    {
-		        mService = null;
-		        
-		        if (callback != null)
-		        	callback.onDisconnected();
-		    }
-		};
-		
-	public void bindService(Context ctx) 
+		case NotificationReceiverService.MSG_LIST_NOTIFICATIONS:
+			if (callback != null)
+				callback.onNotificationList((String[]) msg.obj);
+			break;
+		case NotificationReceiverService.MSG_NO_PERMISSIONS:
+			if (callback != null)
+				callback.onNoPermissions();
+			break;
+		}
+
+		return true;
+	}
+
+	private ServiceConnection mConnection = new ServiceConnection()
 	{
-		Intent it = new Intent(ctx, NotificationReceiverService.class);		
+		public void onServiceConnected(ComponentName className, IBinder service)
+		{
+			mService = new Messenger(service);
+
+			if (callback != null)
+				callback.onConnected();
+		}
+
+		public void onServiceDisconnected(ComponentName className)
+		{
+			mService = null;
+
+			if (callback != null)
+				callback.onDisconnected();
+		}
+	};
+
+	public void bindService(Context ctx)
+	{
+		Intent it = new Intent(ctx, NotificationReceiverService.class);
 		it.putExtra(NotificationReceiverService.configServiceExtra, true);
-		
-	    ctx.bindService(it, mConnection, Context.BIND_AUTO_CREATE);
-	    mIsBound = true;
+
+		ctx.bindService(it, mConnection, Context.BIND_AUTO_CREATE);
+		mIsBound = true;
 	}
 
-	public void unbindService(Context ctx) 
+	public void unbindService(Context ctx)
 	{
-	    if (mIsBound) 
-	    {
-	        ctx.unbindService(mConnection);
-	        mIsBound = false;
-	    }
+		if (mIsBound)
+		{
+			ctx.unbindService(mConnection);
+			mIsBound = false;
+		}
 	}
 
-	private void sendServiceReq(int code) 
+	private void sendServiceReq(int code)
 	{
-	    if (mIsBound) 
-	    {
-	        if (mService != null) 
-	        {
-	            try 
-	            {
-	                Message msg = Message.obtain(null, code);
-	                msg.replyTo = mMessenger;
-	                mService.send(msg);
-	            }
-	            catch (RemoteException e) 
-	            {
-	            } 
-	        }
-	    }
+		if (mIsBound)
+		{
+			if (mService != null)
+			{
+				try
+				{
+					Message msg = Message.obtain(null, code);
+					msg.replyTo = mMessenger;
+					mService.send(msg);
+				}
+				catch (RemoteException e)
+				{
+				}
+			}
+		}
 	}
-	
-	public void getListNotifications() 
+
+	public void getListNotifications()
 	{
 		sendServiceReq(NotificationReceiverService.MSG_LIST_NOTIFICATIONS);
 	}
 
-	public void checkPermissions() 
+	public void checkPermissions()
 	{
 		sendServiceReq(NotificationReceiverService.MSG_CHECK_PERMISSIONS);
 	}

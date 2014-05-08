@@ -10,8 +10,6 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
@@ -25,205 +23,229 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
-public class MainActivity extends Activity 
+public class MainActivity extends Activity
 {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) 
-    {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-   	 
-        if (savedInstanceState == null) 
-        {
-            getFragmentManager().beginTransaction()
-                    .add(R.id.container, new MainFragment())
-                    .commit();
-        }
-    }
+	@Override
+	protected void onCreate(Bundle savedInstanceState)
+	{
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
 
+		if (savedInstanceState == null)
+		{
+			getFragmentManager().beginTransaction()
+					.add(R.id.container, new MainFragment()).commit();
+		}
+	}
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) 
-    {    
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) 
-    {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) 
-        {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		if (id == R.id.action_settings)
+		{
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
+	/**
+	 * A placeholder fragment containing a simple view.
+	 */
 
-	public static class MainFragment 
-		extends Fragment 
-		implements ServiceClient.Callback
-    {
-    	protected static final String TAG = "MainFragment";
+	public static class MainFragment extends Fragment implements
+			ServiceClient.Callback
+	{
+		protected static final String TAG = "MainFragment";
 		private ServiceClient serviceClient = null;
-    	        
-        public void checkService() 
-        {        
-        	serviceClient.getListNotifications();
-        }
+
+		public void checkService()
+		{
+			serviceClient.getListNotifications();
+		}
+
 		@Override
-		public void onNoPermissions() 
+		public void onNoPermissions()
 		{
 			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-	        builder.setMessage(R.string.application_has_no_access)
-	               .setPositiveButton(R.string.open_settings, new DialogInterface.OnClickListener() 
-	               {
-	                   public void onClick(DialogInterface dialog, int id) 
-	                   {
-    						Intent intent=new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-    						startActivity(intent);
-	                   }
-	               })
-	               .setNegativeButton(R.string.cancel_quit, new DialogInterface.OnClickListener() 
-	               {
-	                   public void onClick(DialogInterface dialog, int id) 
-	                   {
-	                       getActivity().finish();
-	                   }
-	               });
-	        // Create the AlertDialog object and return it
-	        builder.create().show();
+			builder.setMessage(R.string.application_has_no_access)
+					.setPositiveButton(R.string.open_settings,
+							new DialogInterface.OnClickListener()
+							{
+								public void onClick(DialogInterface dialog,
+										int id)
+								{
+									Intent intent = new Intent(
+											"android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+									startActivity(intent);
+								}
+							})
+					.setNegativeButton(R.string.cancel_quit,
+							new DialogInterface.OnClickListener()
+							{
+								public void onClick(DialogInterface dialog,
+										int id)
+								{
+									getActivity().finish();
+								}
+							});
+			// Create the AlertDialog object and return it
+			builder.create().show();
 		}
-        
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) 
-        {
-        	View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            
-        	((Button)rootView.findViewById(R.id.buttonCheckService)).setOnClickListener(
-    			new OnClickListener()
-    			{
-					public void onClick(View arg0) 
+
+		private void addOrUpdatedPackage(PackageSettings s, String packageName, int delay)
+		{
+			PackageSettings.Package pkg = s.getPackage(packageName);
+
+			if (pkg == null)
+			{
+				s.addPackage(s.new Package(packageName, true, delay));
+			}
+			else
+			{
+				Log.d(TAG, "Updating to send reminders every minute");
+				pkg.setRemindIntervalSeconds(delay);
+				s.updatePackage(pkg);
+			}
+		}
+		
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container,
+				Bundle savedInstanceState)
+		{
+			View rootView = inflater.inflate(R.layout.fragment_main, container,
+					false);
+
+			((Button) rootView.findViewById(R.id.buttonCheckService))
+					.setOnClickListener(new OnClickListener()
 					{
-			        	checkService();
-					}
-    				
-    			}
-    		);
-        	
-        	final CheckBox cbEnabled =((CheckBox)rootView.findViewById(R.id.checkBoxEnableService)); 
-        	
-        	cbEnabled.setChecked(new Settings(getActivity()).isServiceEnabled());
-        	
-        	cbEnabled.setOnClickListener(
-        			new OnClickListener()
-        			{
-    					public void onClick(View arg0) 
-    					{
-    						Settings s = new Settings(getActivity());
-    						s.setServiceEnabled(cbEnabled.isChecked());
-    					
-    						if (cbEnabled.isChecked())
-    							serviceClient.checkPermissions();
-    					}
-        			});
-        	
-        	((Button)rootView.findViewById(R.id.buttonConfigure)).setOnClickListener(
-        			new OnClickListener()
-        			{
-    					public void onClick(View arg0) 
-    					{    						
-//    						final PackageManager pm = getActivity().getPackageManager();
-    						//get a list of installed apps.
-//    						List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+						public void onClick(View arg0)
+						{
+							checkService();
+						}
 
-  //  						for (ApplicationInfo packageInfo : packages) 
-    //						{
-    	//					    Log.d(TAG, "Installed package :" + packageInfo.packageName);
-    		//				    Log.d(TAG, "Source dir : " + packageInfo.sourceDir);
-    			//			    Log.d(TAG, "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName)); 
-    				//		}
-    						
-    						PackageSettings s = new PackageSettings(getActivity());
-    						
-    						PackageSettings.Package pkg = s.getPackage("com.google.android.calendar"); 
-    						
-    						if (pkg == null)
-    						{
-    							s.addPackage(s.new Package("com.google.android.calendar", true, 60 * 5));
-    						}
-    						else
-    						{
-    							Log.d(TAG, "Updating to send reminders every minute");
-    							pkg.setRemindIntervalSeconds(300);
-    							s.updatePackage(pkg); 
-    						}
+					});
 
-    						Log.d(TAG, "Currently known packages: ");
-    						List<PackageSettings.Package> all = s.getAllPackages();
-    						
-    						for(PackageSettings.Package p : all)
-    						{
-    							Log.d(TAG, ">> " + p);
-    						}
+			final CheckBox cbEnabled = ((CheckBox) rootView
+					.findViewById(R.id.checkBoxEnableService));
 
-    					}
-        			});
-       
-        	((Button)rootView.findViewById(R.id.button2)).setOnClickListener(
-        			new OnClickListener()
-        			{
-        				public void onClick(View arg0)
-        				{
-        					Vibrator v = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);				// TODO: XXX: WARNING: CHECK FOR SILENT HOURS!!!
-        					v.vibrate(new Settings(getActivity()).getVibrationPattern(), -1);
-        				}
-        			});
-            return rootView;
-        }
+			cbEnabled
+					.setChecked(new Settings(getActivity()).isServiceEnabled());
 
-        public void onStart()
-        {
-        	super.onStart();
+			cbEnabled.setOnClickListener(new OnClickListener()
+			{
+				public void onClick(View arg0)
+				{
+					Settings s = new Settings(getActivity());
+					s.setServiceEnabled(cbEnabled.isChecked());
 
-        	Context ctx = getActivity().getApplicationContext();
-        	serviceClient = new ServiceClient(this);
+					if (cbEnabled.isChecked())
+						serviceClient.checkPermissions();
+				}
+			});
 
-        	serviceClient.bindService(ctx);
-        }
-        
-        public void onStop()
-        {
-        	Context ctx = getActivity().getApplicationContext();
-        	serviceClient.unbindService(ctx);
-        	
-        	super.onStop();	
-        }
+			((Button) rootView.findViewById(R.id.buttonConfigure))
+					.setOnClickListener(new OnClickListener()
+					{
+						public void onClick(View arg0)
+						{
+							// final PackageManager pm =
+							// getActivity().getPackageManager();
+							// get a list of installed apps.
+							// List<ApplicationInfo> packages =
+							// pm.getInstalledApplications(PackageManager.GET_META_DATA);
+
+							// for (ApplicationInfo packageInfo : packages)
+							// {
+							// Log.d(TAG, "Installed package :" +
+							// packageInfo.packageName);
+							// Log.d(TAG, "Source dir : " +
+							// packageInfo.sourceDir);
+							// Log.d(TAG, "Launch Activity :" +
+							// pm.getLaunchIntentForPackage(packageInfo.packageName));
+							// }
+							
+							
+
+							PackageSettings s = new PackageSettings(
+									getActivity());
+
+							
+							addOrUpdatedPackage(s, "com.google.android.calendar", 60*5);
+							addOrUpdatedPackage(s, "com.android.mms", 60*4);
+							addOrUpdatedPackage(s, "com.android.phone", 60*3);
+							
+							Log.d(TAG, "Currently known packages: ");
+							List<PackageSettings.Package> all = s
+									.getAllPackages();
+
+							for (PackageSettings.Package p : all)
+							{
+								Log.d(TAG, ">> " + p);
+							}
+
+						}
+					});
+
+			((Button) rootView.findViewById(R.id.button2))
+					.setOnClickListener(new OnClickListener()
+					{
+						public void onClick(View arg0)
+						{
+							Vibrator v = (Vibrator) getActivity()
+									.getSystemService(Context.VIBRATOR_SERVICE); 
+							v.vibrate(new Settings(getActivity())
+									.getVibrationPattern(), -1);
+						}
+					});
+			return rootView;
+		}
+
+		public void onStart()
+		{
+			super.onStart();
+
+			Context ctx = getActivity().getApplicationContext();
+			serviceClient = new ServiceClient(this);
+
+			serviceClient.bindService(ctx);
+		}
+
+		public void onStop()
+		{
+			Context ctx = getActivity().getApplicationContext();
+			serviceClient.unbindService(ctx);
+
+			super.onStop();
+		}
 
 		@Override
-		public void onNotificationList(String[] notifications) 
+		public void onNotificationList(String[] notifications)
 		{
 			if (notifications != null)
 			{
-	        	StringBuilder sb = new StringBuilder();
-	        	
-	        	if (notifications != null)
-		        	for(String ntf: notifications)
-		        	{
-		        		sb.append(ntf);
-		        		sb.append("\n");
-		        	}
-	        	
-	    		Toast.makeText(getActivity(), sb.toString(), Toast.LENGTH_LONG).show();	
+				StringBuilder sb = new StringBuilder();
+
+				if (notifications != null)
+					for (String ntf : notifications)
+					{
+						sb.append(ntf);
+						sb.append("\n");
+					}
+
+				Toast.makeText(getActivity(), sb.toString(), Toast.LENGTH_LONG)
+						.show();
 			}
 			else
 			{
@@ -232,16 +254,16 @@ public class MainActivity extends Activity
 		}
 
 		@Override
-		public void onConnected() 
+		public void onConnected()
 		{
-	//		serviceClient.checkPermissions();
+			// serviceClient.checkPermissions();
 		}
 
 		@Override
-		public void onDisconnected() 
+		public void onDisconnected()
 		{
 			// TODO Auto-generated method stu
 		}
 
-    }
+	}
 }
