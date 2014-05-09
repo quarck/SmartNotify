@@ -8,47 +8,208 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.github.quarck.smartnotify.MainActivity$PlaceholderFragment" >
 
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/buttonConfigure"
-        android:layout_below="@+id/buttonConfigure"
-        android:layout_marginTop="26dp"
-        android:text="Some Button" />
-
-    <Button
-        android:id="@+id/buttonCheckService"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/button2"
-        android:layout_centerVertical="true"
-        android:text="CheckService" />
-
     <CheckBox
         android:id="@+id/checkBoxEnableService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:text="Enable Smart Notify" />
+        android:text="Enable Smart Notify" 
+        android:textSize="20sp" />
+    
+    <!-- Google Calendar -->
+    
+    <CheckBox
+        android:id="@+id/checkBoxHandleCalendar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/checkBoxEnableService"
+        android:text="Handle Calendar application"
+        android:textSize="20sp"  />
+
+    <TextView
+        android:id="@+id/textViewLabel1cal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextCalendarRemindInterval"
+        android:layout_alignLeft="@+id/checkBoxHandleCalendar"
+        android:layout_below="@+id/checkBoxHandleCalendar"
+        android:layout_marginLeft="33dp"
+        android:text="Remind every"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    
+    <EditText
+        android:id="@+id/editTextCalendarRemindInterval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkBoxHandleCalendar"
+        android:layout_toRightOf="@+id/textViewLabel1cal"
+        android:layout_toLeftOf="@+id/textViewLabel2cal"        
+        android:ems="10"
+        android:inputType="number"
+        android:text="5"
+        android:textAppearance="?android:attr/textAppearanceMedium"  />
+    
+    <TextView
+        android:id="@+id/textViewLabel2cal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextCalendarRemindInterval"
+        android:layout_alignRight="@+id/checkBoxHandleCalendar"
+        android:text=" minutes"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    
+    
+    <!-- SMS -->
+    
+    <CheckBox
+        android:id="@+id/checkBoxHandleSMS"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/editTextCalendarRemindInterval"
+        android:text="Handle SMS application"
+        android:textSize="20sp"  />
+
+    <TextView
+        android:id="@+id/textViewLabel1sms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextSMSRemindInterval"
+        android:layout_alignLeft="@+id/checkBoxHandleSMS"
+        android:layout_below="@+id/checkBoxHandleSMS"
+        android:layout_marginLeft="33dp"
+        android:text="Remind every"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    
+    <EditText
+        android:id="@+id/editTextSMSRemindInterval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkBoxHandleSMS"
+        android:layout_toRightOf="@+id/textViewLabel1sms"
+        android:layout_toLeftOf="@+id/textViewLabel2sms"        
+        android:ems="10"
+        android:inputType="number"
+        android:text="5"
+        android:textAppearance="?android:attr/textAppearanceMedium"  />
+    
+    <TextView
+        android:id="@+id/textViewLabel2sms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextSMSRemindInterval"
+        android:layout_alignRight="@+id/checkBoxHandleSMS"
+        android:text=" minutes"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+<!-- -->
+    
+    <!-- Phone -->
+    <CheckBox
+        android:id="@+id/checkBoxHandlePhone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/editTextSMSRemindInterval"
+        android:text="Handle Missed Calls"
+        android:textSize="20sp"  />
+
+    <TextView
+        android:id="@+id/textViewLabel1phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextPhoneRemindInterval"
+        android:layout_alignLeft="@+id/checkBoxHandlePhone"
+        android:layout_below="@+id/checkBoxHandlePhone"
+        android:layout_marginLeft="33dp"
+        android:text="Remind every"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    
+    <EditText
+        android:id="@+id/editTextPhoneRemindInterval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkBoxHandlePhone"
+        android:layout_toRightOf="@+id/textViewLabel1phone"
+        android:layout_toLeftOf="@+id/textViewLabel2phone"        
+        android:ems="10"
+        android:inputType="number"
+        android:text="5"
+        android:textAppearance="?android:attr/textAppearanceMedium"  />
+    
+    <TextView
+        android:id="@+id/textViewLabel2phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextPhoneRemindInterval"
+        android:layout_alignRight="@+id/checkBoxHandlePhone"
+        android:text=" minutes"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+<!-- -->
+    
+    
+    <!-- GMail -->
+    <CheckBox
+        android:id="@+id/checkBoxHandleGmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/editTextPhoneRemindInterval"
+        android:text="Handle GMail application"
+        android:textSize="20sp"  />
+
+    <TextView
+        android:id="@+id/textViewLabel1Gmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextGmailRemindInterval"
+        android:layout_alignLeft="@+id/checkBoxHandleGmail"
+        android:layout_below="@+id/checkBoxHandleGmail"
+        android:layout_marginLeft="33dp"
+        android:text="Remind every"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+    
+    <EditText
+        android:id="@+id/editTextGmailRemindInterval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkBoxHandleGmail"
+        android:layout_toRightOf="@+id/textViewLabel1Gmail"
+        android:layout_toLeftOf="@+id/textViewLabel2Gmail"        
+        android:ems="10"
+        android:inputType="number"
+        android:text="5"
+        android:textAppearance="?android:attr/textAppearanceMedium"  />
+    
+    <TextView
+        android:id="@+id/textViewLabel2Gmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/editTextGmailRemindInterval"
+        android:layout_alignRight="@+id/checkBoxHandleGmail"
+        android:text=" minutes"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+<!-- -->
+    
+    <Button
+        android:id="@+id/buttonCheckService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editTextGmailRemindInterval"
+        android:text="CheckService" />
 
     <Button
         android:id="@+id/buttonConfigure"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/checkBoxEnableService"
-        android:layout_below="@+id/checkBoxEnableService"
-        android:text="Configure" />
-
-    <Button
-        android:id="@+id/button1"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/buttonCheckService"
         android:layout_below="@+id/buttonCheckService"
-        android:layout_marginTop="24dp"
-        android:text="Button" />
+        android:text="Configure" />
 
 </RelativeLayout>

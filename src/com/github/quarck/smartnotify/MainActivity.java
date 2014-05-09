@@ -3,7 +3,7 @@
 package com.github.quarck.smartnotify;
 
 import java.util.List;
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -21,8 +21,10 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.TextView;
 import android.widget.Toast;
 
+@SuppressLint("UseValueOf")
 public class MainActivity extends Activity
 {
 	@Override
@@ -36,6 +38,8 @@ public class MainActivity extends Activity
 			getFragmentManager().beginTransaction()
 					.add(R.id.container, new MainFragment()).commit();
 		}
+
+		CallStateTracker.start(this);
 	}
 
 	@Override
@@ -70,8 +74,37 @@ public class MainActivity extends Activity
 		protected static final String TAG = "MainFragment";
 		private ServiceClient serviceClient = null;
 
+		private CheckBox cbEnableService = null;
+		private CheckBox cbHandleCal = null;
+		private TextView editCalInterval = null;
+		private CheckBox cbHandleSMS = null;
+		private TextView editSMSInterval = null;
+		private CheckBox cbHandlePhone = null;
+		private TextView editPhoneInterval = null;
+		private CheckBox cbHandleGmail = null;
+		private TextView editGmailInterval = null;
+		
+		
 		public void checkService()
 		{
+			
+			// final PackageManager pm =
+			// getActivity().getPackageManager();
+			// get a list of installed apps.
+			// List<ApplicationInfo> packages =
+			// pm.getInstalledApplications(PackageManager.GET_META_DATA);
+
+			// for (ApplicationInfo packageInfo : packages)
+			// {
+			// Log.d(TAG, "Installed package :" +
+			// packageInfo.packageName);
+			// Log.d(TAG, "Source dir : " +
+			// packageInfo.sourceDir);
+			// Log.d(TAG, "Launch Activity :" +
+			// pm.getLaunchIntentForPackage(packageInfo.packageName));
+			// }
+			
+		
 			serviceClient.getListNotifications();
 		}
 
@@ -104,20 +137,80 @@ public class MainActivity extends Activity
 			builder.create().show();
 		}
 
-		private void addOrUpdatedPackage(PackageSettings s, String packageName, int delay)
+		private void set(PackageSettings s, String packageName, int delay, boolean enabled)
 		{
 			PackageSettings.Package pkg = s.getPackage(packageName);
 
 			if (pkg == null)
 			{
-				s.addPackage(s.new Package(packageName, true, delay));
+				s.addPackage(s.new Package(packageName, enabled, delay));
 			}
 			else
 			{
 				Log.d(TAG, "Updating to send reminders every minute");
 				pkg.setRemindIntervalSeconds(delay);
+				pkg.setHandlingThis(enabled);
 				s.updatePackage(pkg);
 			}
+		}
+		
+		private boolean is(PackageSettings s, String packageName)
+		{
+			PackageSettings.Package pkg = s.getPackage(packageName);			
+			return pkg != null ? pkg.isHandlingThis() : false;
+		}
+		
+		private int interval(PackageSettings s, String packageName)
+		{
+			PackageSettings.Package pkg = s.getPackage(packageName);			
+			return pkg != null ? pkg.getRemindIntervalSeconds() : 60 * 5;
+		}
+
+		private void saveSettings(Settings settings, PackageSettings pkgSettings)
+		{
+			settings.setServiceEnabled(cbEnableService.isChecked());
+			
+			try
+			{
+				set(pkgSettings, "com.google.android.calendar", Integer.parseInt(editCalInterval.getText().toString()) * 60, cbHandleCal.isChecked());
+				set(pkgSettings, "com.android.mms", Integer.parseInt(editSMSInterval.getText().toString()) * 60, cbHandleSMS.isChecked());
+				set(pkgSettings, "com.android.phone", Integer.parseInt(editPhoneInterval.getText().toString()) * 60, cbHandlePhone.isChecked());
+				set(pkgSettings, "com.google.android.gm", Integer.parseInt(editGmailInterval.getText().toString()) * 60, cbHandleGmail.isChecked());
+				
+				Log.d(TAG, "Currently known packages: ");
+		
+				for (PackageSettings.Package p : pkgSettings.getAllPackages())
+				{
+					Log.d(TAG, ">> " + p);
+				}
+			}
+			catch (Exception ex)
+			{
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage("Invalid number")
+						.setPositiveButton("OK",
+								new DialogInterface.OnClickListener()
+								{
+									public void onClick(DialogInterface dialog,
+											int id)
+									{
+									}
+								});
+				builder.create().show();
+			}
+			
+		}
+
+		private void loadSettings(PackageSettings s)
+		{
+			cbHandleCal.setChecked(is(s, "com.google.android.calendar"));
+			editCalInterval.setText((new Integer(interval(s, "com.google.android.calendar")/60)).toString());
+			cbHandleSMS.setChecked(is(s, "com.android.mms"));
+			editSMSInterval.setText((new Integer(interval(s, "com.android.mms")/60)).toString());
+			cbHandlePhone.setChecked(is(s, "com.android.phone"));
+			editPhoneInterval.setText((new Integer(interval(s, "com.android.phone")/60)).toString());
+			cbHandleGmail.setChecked(is(s, "com.google.android.gm"));
+			editGmailInterval.setText((new Integer(interval(s, "com.google.android.gm")/60)).toString());			
 		}
 		
 		@Override
@@ -127,6 +220,18 @@ public class MainActivity extends Activity
 			View rootView = inflater.inflate(R.layout.fragment_main, container,
 					false);
 
+			
+			cbEnableService = (CheckBox) rootView.findViewById(R.id.checkBoxEnableService);
+			cbHandleCal = (CheckBox) rootView.findViewById(R.id.checkBoxHandleCalendar);
+			editCalInterval = (TextView) rootView.findViewById(R.id.editTextCalendarRemindInterval);
+			cbHandleSMS = (CheckBox) rootView.findViewById(R.id.checkBoxHandleSMS);
+			editSMSInterval = (TextView) rootView.findViewById(R.id.editTextSMSRemindInterval);
+			cbHandlePhone = (CheckBox) rootView.findViewById(R.id.checkBoxHandlePhone);
+			editPhoneInterval = (TextView) rootView.findViewById(R.id.editTextPhoneRemindInterval);
+			cbHandleGmail = (CheckBox) rootView.findViewById(R.id.checkBoxHandleGmail);
+			editGmailInterval = (TextView) rootView.findViewById(R.id.editTextGmailRemindInterval);
+
+			
 			((Button) rootView.findViewById(R.id.buttonCheckService))
 					.setOnClickListener(new OnClickListener()
 					{
@@ -137,78 +242,40 @@ public class MainActivity extends Activity
 
 					});
 
-			final CheckBox cbEnabled = ((CheckBox) rootView
-					.findViewById(R.id.checkBoxEnableService));
-
-			cbEnabled
-					.setChecked(new Settings(getActivity()).isServiceEnabled());
-
-			cbEnabled.setOnClickListener(new OnClickListener()
+			Settings settings = new Settings(getActivity());
+			
+			cbEnableService.setChecked(settings.isServiceEnabled());
+			cbEnableService.setOnClickListener(new OnClickListener()
 			{
 				public void onClick(View arg0)
 				{
-					Settings s = new Settings(getActivity());
-					s.setServiceEnabled(cbEnabled.isChecked());
+					PackageSettings s = new PackageSettings(
+							getActivity());
+					
+					saveSettings(new Settings(getActivity()), s);
 
-					if (cbEnabled.isChecked())
+					if (cbEnableService.isChecked())
 						serviceClient.checkPermissions();
 				}
 			});
+			
+			PackageSettings s = new PackageSettings(
+					getActivity());
+			
+			loadSettings(s);
 
 			((Button) rootView.findViewById(R.id.buttonConfigure))
 					.setOnClickListener(new OnClickListener()
 					{
 						public void onClick(View arg0)
 						{
-							// final PackageManager pm =
-							// getActivity().getPackageManager();
-							// get a list of installed apps.
-							// List<ApplicationInfo> packages =
-							// pm.getInstalledApplications(PackageManager.GET_META_DATA);
-
-							// for (ApplicationInfo packageInfo : packages)
-							// {
-							// Log.d(TAG, "Installed package :" +
-							// packageInfo.packageName);
-							// Log.d(TAG, "Source dir : " +
-							// packageInfo.sourceDir);
-							// Log.d(TAG, "Launch Activity :" +
-							// pm.getLaunchIntentForPackage(packageInfo.packageName));
-							// }
-							
-							
-
 							PackageSettings s = new PackageSettings(
 									getActivity());
-
 							
-							addOrUpdatedPackage(s, "com.google.android.calendar", 60*5);
-							addOrUpdatedPackage(s, "com.android.mms", 60*4);
-							addOrUpdatedPackage(s, "com.android.phone", 60*3);
-							
-							Log.d(TAG, "Currently known packages: ");
-							List<PackageSettings.Package> all = s
-									.getAllPackages();
-
-							for (PackageSettings.Package p : all)
-							{
-								Log.d(TAG, ">> " + p);
-							}
-
+							saveSettings(new Settings(getActivity()), s);
 						}
 					});
 
-			((Button) rootView.findViewById(R.id.button2))
-					.setOnClickListener(new OnClickListener()
-					{
-						public void onClick(View arg0)
-						{
-							Vibrator v = (Vibrator) getActivity()
-									.getSystemService(Context.VIBRATOR_SERVICE); 
-							v.vibrate(new Settings(getActivity())
-									.getVibrationPattern(), -1);
-						}
-					});
 			return rootView;
 		}
 

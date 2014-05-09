@@ -118,6 +118,8 @@ public class NotificationReceiverService extends NotificationListenerService
 		Log.d(TAG, "PackageSettings");
 		pkgSettings = new PackageSettings(this);
 
+		
+		CallStateTracker.start(this);
 	}
 
 	@Override
@@ -136,7 +138,7 @@ public class NotificationReceiverService extends NotificationListenerService
 		return super.onBind(intent);
 	}
 
-	private void update()
+	private void update(StatusBarNotification addedRemoved)
 	{
 		Log.d(TAG, "update");
 
@@ -216,8 +218,18 @@ public class NotificationReceiverService extends NotificationListenerService
 
 		if (cntHandledNotifications != 0)
 		{
+			// if added / removed notification is one of the handled onces - then make sure to re-create 
+			// alarm fully, by first cancelling it and then - creating, so it would start from zero
+			// and would not notify user earlier than requested  timeout
+			
+			PackageSettings.Package pkg = pkgSettings.getPackage(addedRemoved.getPackageName());
+			
+			if (pkg != null && pkg.isHandlingThis())
+				alarm.CancelAlarm(this);
+			
 			Log.d(TAG, "Firing alarm with interval " + minReminderInterval
 					+ " seconds");
+			
 			alarm.SetAlarm(this, minReminderInterval);
 		}
 		else
@@ -231,13 +243,13 @@ public class NotificationReceiverService extends NotificationListenerService
 	public void onNotificationPosted(StatusBarNotification arg0)
 	{
 		Log.d(TAG, "Notification posted: " + arg0);
-		update();
+		update(arg0);
 	}
 
 	@Override
 	public void onNotificationRemoved(StatusBarNotification arg0)
 	{
 		Log.d(TAG, "Notification removed: " + arg0);
-		update();
+		update(arg0);
 	}
 }

@@ -62,6 +62,13 @@ public class Alarm extends BroadcastReceiver
 				Log.d(TAG, "Service is enabled, vibrating");
 			}
 
+			if (fireReminder
+				&& CallStateTracker.isOnCall(context))
+			{
+				Log.d(TAG, "Was going to fire the reminder, but call is currently in progress. Would skip this one.");
+				fireReminder = false;
+			}
+
 			if (fireReminder)
 			{
 				Vibrator v = (Vibrator) context
@@ -80,9 +87,6 @@ public class Alarm extends BroadcastReceiver
 
 	public void SetAlarm(Context context, int timeoutSec)
 	{
-		// Cancel any pending alarms, if any
-		CancelAlarm(context);
-
 		Intent intent = new Intent(context, Alarm.class);
 		PendingIntent pendIntent = PendingIntent.getBroadcast(context, 0,
 				intent, PendingIntent.FLAG_UPDATE_CURRENT);
