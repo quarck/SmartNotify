@@ -49,14 +49,14 @@ public class Settings
 
 	public int getSilenceFrom()
 	{
-		return prefs.getInt(SILENT_FROM_KEY, 21*60+0); // 21:00
+		return prefs.getInt(SILENT_FROM_KEY, 21 * 60 + 0); // 21:00
 	}
 
 	public int getSilenceTo()
 	{
-		return prefs.getInt(SILENT_TO_KEY, 5*60+30); // 5:30
+		return prefs.getInt(SILENT_TO_KEY, 5 * 60 + 30); // 5:30
 	}
-
+	
 	public boolean hasSilencePeriod()
 	{
 		return getSilenceFrom() != getSilenceTo();
@@ -96,8 +96,7 @@ public class Settings
 	{
 		try
 		{
-			String patternStr = prefs.getString(VIBRATION_PATTERN_KEY,
-					"0,1200,150,100,50,100,50,100");
+			String patternStr = prefs.getString(VIBRATION_PATTERN_KEY, "0,80,30,80,30,80,30,80,30,80,30,80,30,80,150,900");
 
 			String[] times = patternStr.split(",");
 

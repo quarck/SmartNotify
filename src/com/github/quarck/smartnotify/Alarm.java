@@ -43,36 +43,44 @@ public class Alarm extends BroadcastReceiver
 				if (silenceTo < silenceFrom)
 					silenceTo += 24 * 60;
 
-				if (silenceFrom <= currentTm && currentTm <= silenceTo)
+				if ((silenceFrom <= currentTm && currentTm <= silenceTo)
+					|| (silenceFrom <= currentTm+24*60 && currentTm+24*60 <= silenceTo))
 				{
-					Log.d(TAG,
-							"Service is enabled, but we are in silent zone, not alarming! CurrentTM: "
-									+ currentTm + ", silence from "
-									+ silenceFrom + " to " + silenceTo);
+					Log.d(TAG, "Service is enabled, but we are in silent zone, not alarming! CurrentTM: " + currentTm
+							+ ", silence from " + silenceFrom + " to " + silenceTo);
 					fireReminder = false;
 				}
 				else
 				{
-					Log.d(TAG,
-							"Service is enabled and not in the silent zone, vibrating");
-				}
+					Log.d(TAG, "Service is enabled, we are not in silient zone, vibrating. CurrentTM: " + currentTm
+							+ ", silence from " + silenceFrom + " to " + silenceTo);				}
 			}
 			else
 			{
 				Log.d(TAG, "Service is enabled, vibrating");
-			}
-
-			if (fireReminder
-				&& CallStateTracker.isOnCall(context))
-			{
-				Log.d(TAG, "Was going to fire the reminder, but call is currently in progress. Would skip this one.");
-				fireReminder = false;
+				Log.d(TAG, "Silence is from " + settings.getSilenceFrom() + " to " + settings.getSilenceTo());
 			}
 
 			if (fireReminder)
 			{
-				Vibrator v = (Vibrator) context
-						.getSystemService(Context.VIBRATOR_SERVICE);
+				boolean isOnCall = false;
+				
+				GlobalState global = (GlobalState)context.getApplicationContext();
+				if (global != null)
+					isOnCall = global.getIsOnCall();
+				else
+					Log.e(TAG, "Can't access global state");
+				
+				if (isOnCall)
+				{
+					Log.d(TAG, "Was going to fire the reminder, but call is currently in progress. Would skip this one.");
+					fireReminder = false;
+				}
+			}
+
+			if (fireReminder)
+			{
+				Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
 				long[] pattern = settings.getVibrationPattern();
 				Log.d(TAG, "Vibration pattern: " + pattern);
 				v.vibrate(pattern, -1);
@@ -81,25 +89,26 @@ public class Alarm extends BroadcastReceiver
 		else
 		{
 			Log.d(TAG, "Service is now got disabled, cancelling alarm");
-			CancelAlarm(context);
+			cancelAlarm(context);
 		}
 	}
 
-	public void SetAlarm(Context context, int timeoutSec)
+	public void setAlarm(Context context, int timeoutSec)
 	{
-		Intent intent = new Intent(context, Alarm.class);
-		PendingIntent pendIntent = PendingIntent.getBroadcast(context, 0,
-				intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		cancelAlarm(context); // cancel previous alarm, if any, so we would not
+								// have two alarms
 
-		alarmManager(context).setRepeating(AlarmManager.RTC_WAKEUP,
-				System.currentTimeMillis(), 1000 * timeoutSec, pendIntent);
+		Intent intent = new Intent(context, Alarm.class);
+		PendingIntent pendIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		alarmManager(context).setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000 * timeoutSec,
+				1000 * timeoutSec, pendIntent);
 	}
 
-	public void CancelAlarm(Context context)
+	public void cancelAlarm(Context context)
 	{
 		Intent intent = new Intent(context, Alarm.class);
-		PendingIntent sender = PendingIntent
-				.getBroadcast(context, 0, intent, 0);
+		PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, 0);
 
 		alarmManager(context).cancel(sender);
 	}

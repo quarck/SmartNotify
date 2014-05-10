@@ -144,6 +144,13 @@ public class PackageSettings extends SQLiteOpenHelper
 		db.close();
 	}
 
+	public boolean isPackageHandled(String packageId)
+	{
+		Package pkg = getPackage(packageId);
+		
+		return pkg != null && pkg.isHandlingThis();
+	}
+	
 	public Package getPackage(String packageId)
 	{
 		SQLiteDatabase db = this.getReadableDatabase();

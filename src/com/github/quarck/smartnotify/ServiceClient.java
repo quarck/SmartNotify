@@ -119,4 +119,9 @@ public class ServiceClient implements Handler.Callback
 	{
 		sendServiceReq(NotificationReceiverService.MSG_CHECK_PERMISSIONS);
 	}
+	
+	public void forceReloadConfig()
+	{
+		sendServiceReq(NotificationReceiverService.MSG_RELOAD_SETTINGS);
+	}
 }

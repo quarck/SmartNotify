@@ -12,8 +12,7 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
-public class NotificationReceiverService extends NotificationListenerService
-		implements Handler.Callback
+public class NotificationReceiverService extends NotificationListenerService implements Handler.Callback
 {
 	public static final String TAG = "SmartNotify Service";
 
@@ -22,6 +21,7 @@ public class NotificationReceiverService extends NotificationListenerService
 	public static final int MSG_CHECK_PERMISSIONS = 1;
 	public static final int MSG_NO_PERMISSIONS = 2;
 	public static final int MSG_LIST_NOTIFICATIONS = 3;
+	public static final int MSG_RELOAD_SETTINGS = 4;
 
 	private Alarm alarm = null;
 
@@ -44,6 +44,11 @@ public class NotificationReceiverService extends NotificationListenerService
 
 		case MSG_LIST_NOTIFICATIONS:
 			ret = handleListNotifications(msg);
+			break;
+			
+		case MSG_RELOAD_SETTINGS:
+			Log.d(TAG, "Explicit request to reload config");
+			update(null);
 			break;
 		}
 
@@ -118,14 +123,13 @@ public class NotificationReceiverService extends NotificationListenerService
 		Log.d(TAG, "PackageSettings");
 		pkgSettings = new PackageSettings(this);
 
-		
 		CallStateTracker.start(this);
 	}
 
 	@Override
 	public void onDestroy()
 	{
-		Log.d(TAG, "onDestroy. (WTF??)");
+		Log.d(TAG, "onDestroy (??)");
 		super.onDestroy();
 	}
 
@@ -138,15 +142,14 @@ public class NotificationReceiverService extends NotificationListenerService
 		return super.onBind(intent);
 	}
 
-	private void update(StatusBarNotification addedRemoved)
+	private void update(StatusBarNotification addedOrRemoved)
 	{
 		Log.d(TAG, "update");
 
 		if (!settings.isServiceEnabled())
 		{
-			Log.d(TAG,
-					"Service is disabled, cancelling all the alarms and returning");
-			alarm.CancelAlarm(this);
+			Log.d(TAG, "Service is disabled, cancelling all the alarms and returning");
+			alarm.cancelAlarm(this);
 			return;
 		}
 
@@ -167,8 +170,7 @@ public class NotificationReceiverService extends NotificationListenerService
 
 		if (notifications != null)
 		{
-			Log.d(TAG, "Total number of notifications currently active: "
-					+ notifications.length);
+			Log.d(TAG, "Total number of notifications currently active: " + notifications.length);
 
 			for (StatusBarNotification notification : notifications)
 			{
@@ -178,8 +180,7 @@ public class NotificationReceiverService extends NotificationListenerService
 
 				Log.d(TAG, "Package name is " + packageName);
 
-				PackageSettings.Package pkg = pkgSettings
-						.getPackage(packageName);
+				PackageSettings.Package pkg = pkgSettings.getPackage(packageName);
 
 				if (pkg != null && pkg.isHandlingThis())
 				{
@@ -189,8 +190,7 @@ public class NotificationReceiverService extends NotificationListenerService
 					if (pkg.getRemindIntervalSeconds() < minReminderInterval)
 					{
 						minReminderInterval = pkg.getRemindIntervalSeconds();
-						Log.d(TAG, "remind interval updated to "
-								+ minReminderInterval + " seconds");
+						Log.d(TAG, "remind interval updated to " + minReminderInterval + " seconds");
 					}
 				}
 				else
@@ -209,7 +209,6 @@ public class NotificationReceiverService extends NotificationListenerService
 			{
 				Log.d(TAG, ">> " + pkg);
 			}
-
 		}
 		else
 		{
@@ -218,24 +217,31 @@ public class NotificationReceiverService extends NotificationListenerService
 
 		if (cntHandledNotifications != 0)
 		{
-			// if added / removed notification is one of the handled onces - then make sure to re-create 
-			// alarm fully, by first cancelling it and then - creating, so it would start from zero
-			// and would not notify user earlier than requested  timeout
-			
-			PackageSettings.Package pkg = pkgSettings.getPackage(addedRemoved.getPackageName());
-			
-			if (pkg != null && pkg.isHandlingThis())
-				alarm.CancelAlarm(this);
-			
-			Log.d(TAG, "Firing alarm with interval " + minReminderInterval
-					+ " seconds");
-			
-			alarm.SetAlarm(this, minReminderInterval);
+			// only (re)set alarm if added or removed notification is one of the
+			// handled notifications.
+			// otherwise alarm would be re-started each time the non-handled
+			// notification appears or disappears
+			// (which is incorrect)
+			//
+			// also we would force re-set alarm if addedOrUpdated is null, this means
+			// it is not being called from the callback, but it is an explicit request 
+			// from the UI
+
+			if (addedOrRemoved == null 
+					|| pkgSettings.isPackageHandled(addedOrRemoved.getPackageName()))
+			{
+				Log.d(TAG, "Firing alarm with interval " + minReminderInterval + " seconds");
+				alarm.setAlarm(this, minReminderInterval);
+			}
+			else
+			{
+				Log.d(TAG, "Added/Removed notification is not handled, - not (Re)setting the alarm");
+			}
 		}
 		else
 		{
 			Log.d(TAG, "Cancelling alarm, if any");
-			alarm.CancelAlarm(this);
+			alarm.cancelAlarm(this);
 		}
 	}
 
