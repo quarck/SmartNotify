@@ -8,7 +8,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 public class PackageSettings extends SQLiteOpenHelper
 {
@@ -16,11 +15,6 @@ public class PackageSettings extends SQLiteOpenHelper
 
 	public class Package
 	{
-		// private int id;
-		// // Java boilerplate
-		// public int getId() { return id; }
-		// public void setId(int newId) { id = newId; }
-
 		private String packageName;
 
 		// Java boilerplate
@@ -90,7 +84,7 @@ public class PackageSettings extends SQLiteOpenHelper
 
 	private final String[] COLUMNS =
 	{
-			KEY_PACKAGE, KEY_HANDLE, KEY_INTERVAL
+		KEY_PACKAGE, KEY_HANDLE, KEY_INTERVAL
 	};
 
 	public PackageSettings(Context context)
@@ -101,25 +95,26 @@ public class PackageSettings extends SQLiteOpenHelper
 	@Override
 	public void onCreate(SQLiteDatabase db)
 	{
-		Log.d(TAG, "DB CREATED");
 		String CREATE_PKG_TABLE = "CREATE TABLE " + TABLE_NAME + " ( "
-				+
-				// "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-				KEY_PACKAGE + " TEXT PRIMARY KEY, " + KEY_HANDLE + " INTEGER, "
+				+ KEY_PACKAGE + " TEXT PRIMARY KEY, " + KEY_HANDLE + " INTEGER, "
 				+ KEY_INTERVAL + " INTEGER )";
 
-		Log.d(TAG, "Creation query: " + CREATE_PKG_TABLE);
+		Lw.d(TAG, "Creating DB TABLE using query: " + CREATE_PKG_TABLE);
 
 		db.execSQL(CREATE_PKG_TABLE);
 
 		String CREATE_INDEX = "CREATE UNIQUE INDEX " + INDEX_NAME + " ON "
 				+ TABLE_NAME + " (" + KEY_PACKAGE + ")";
+
+		Lw.d(TAG, "Creating DB INDEX using query: " + CREATE_INDEX);
+		
 		db.execSQL(CREATE_INDEX);
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
 	{
+		Lw.d(TAG, "DROPPING table and index");
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
 		db.execSQL("DROP INDEX IF EXISTS " + INDEX_NAME);
 		this.onCreate(db);
@@ -127,7 +122,7 @@ public class PackageSettings extends SQLiteOpenHelper
 
 	public void addPackage(Package pkg)
 	{
-		Log.d(TAG, "addPackage " + pkg.toString());
+		Lw.d(TAG, "addPackage " + pkg.toString());
 
 		SQLiteDatabase db = this.getWritableDatabase();
 
@@ -155,7 +150,7 @@ public class PackageSettings extends SQLiteOpenHelper
 	{
 		SQLiteDatabase db = this.getReadableDatabase();
 
-		Log.d(TAG, "getPackage" + packageId);
+		Lw.d(TAG, "getPackage" + packageId);
 
 		Cursor cursor = db.query(TABLE_NAME, // a. table
 				COLUMNS, // b. column names
@@ -177,10 +172,6 @@ public class PackageSettings extends SQLiteOpenHelper
 
 			pkg = new Package(cursor.getString(0), Integer.parseInt(cursor
 					.getString(1)) != 0, Integer.parseInt(cursor.getString(2)));
-
-			// pkg.setId(Integer.parseInt(cursor.getString(0)));
-
-			Log.d("getPackage(" + packageId + ")", pkg.toString());
 		}
 
 		return pkg;
@@ -208,8 +199,6 @@ public class PackageSettings extends SQLiteOpenHelper
 			}
 			while (cursor.moveToNext());
 		}
-
-		Log.d("getAllPackages()", packages.toString());
 
 		return packages;
 	}
@@ -250,6 +239,6 @@ public class PackageSettings extends SQLiteOpenHelper
 
 		db.close();
 
-		Log.d("deletePackage", pkg.toString());
+		Lw.d(TAG, "deletePackage "  + pkg.toString());
 	}
 }

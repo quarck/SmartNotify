@@ -12,6 +12,8 @@ import android.os.RemoteException;
 
 public class ServiceClient implements Handler.Callback
 {
+	private static final String TAG = "ServiceClient";
+	
 	private Messenger mService = null;
 
 	private boolean mIsBound;
@@ -39,6 +41,8 @@ public class ServiceClient implements Handler.Callback
 	@Override
 	public boolean handleMessage(Message msg)
 	{
+		Lw.d(TAG, "handleMessage: " + msg.what);
+		
 		switch (msg.what)
 		{
 		case NotificationReceiverService.MSG_LIST_NOTIFICATIONS:
@@ -50,6 +54,9 @@ public class ServiceClient implements Handler.Callback
 				callback.onNoPermissions();
 			break;
 		}
+		
+		if (callback == null)
+			Lw.e(TAG, "No callback attached");
 
 		return true;
 	}
@@ -58,6 +65,8 @@ public class ServiceClient implements Handler.Callback
 	{
 		public void onServiceConnected(ComponentName className, IBinder service)
 		{
+			Lw.d(TAG, "Got connection to the service");
+			
 			mService = new Messenger(service);
 
 			if (callback != null)
@@ -66,6 +75,8 @@ public class ServiceClient implements Handler.Callback
 
 		public void onServiceDisconnected(ComponentName className)
 		{
+			Lw.d(TAG, "Service disconnected");
+			
 			mService = null;
 
 			if (callback != null)
@@ -75,6 +86,8 @@ public class ServiceClient implements Handler.Callback
 
 	public void bindService(Context ctx)
 	{
+		Lw.d(TAG, "Binding service");
+		
 		Intent it = new Intent(ctx, NotificationReceiverService.class);
 		it.putExtra(NotificationReceiverService.configServiceExtra, true);
 
@@ -86,13 +99,19 @@ public class ServiceClient implements Handler.Callback
 	{
 		if (mIsBound)
 		{
+			Lw.d(TAG, "unbinding service");
 			ctx.unbindService(mConnection);
 			mIsBound = false;
+		}
+		else
+		{
+			Lw.e(TAG, "unbind request, but service is not bound!");
 		}
 	}
 
 	private void sendServiceReq(int code)
 	{
+		Lw.d(TAG, "Sending request " + code + " to the service" );
 		if (mIsBound)
 		{
 			if (mService != null)
@@ -105,8 +124,13 @@ public class ServiceClient implements Handler.Callback
 				}
 				catch (RemoteException e)
 				{
+					Lw.e(TAG, "Failed to send req - got exception " + e);
 				}
 			}
+		}
+		else
+		{
+			Lw.e(TAG, "Failed to send req - service is not bound!");
 		}
 	}
 

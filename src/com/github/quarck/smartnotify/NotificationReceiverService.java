@@ -1,7 +1,5 @@
 package com.github.quarck.smartnotify;
 
-import java.util.List;
-
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -10,11 +8,10 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.util.Log;
 
 public class NotificationReceiverService extends NotificationListenerService implements Handler.Callback
 {
-	public static final String TAG = "SmartNotify Service";
+	public static final String TAG = "Service";
 
 	public static final String configServiceExtra = "configService";
 
@@ -36,6 +33,8 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	{
 		boolean ret = true;
 
+		Lw.d(TAG, "handleMessage, msg=" + msg.what);
+		
 		switch (msg.what)
 		{
 		case MSG_CHECK_PERMISSIONS:
@@ -47,7 +46,7 @@ public class NotificationReceiverService extends NotificationListenerService imp
 			break;
 			
 		case MSG_RELOAD_SETTINGS:
-			Log.d(TAG, "Explicit request to reload config");
+			Lw.d(TAG, "Explicit request to reload config");
 			update(null);
 			break;
 		}
@@ -57,14 +56,14 @@ public class NotificationReceiverService extends NotificationListenerService imp
 
 	private boolean handleCheckPermissions(Message msg)
 	{
-		Log.d(TAG, "handleCheckPermissions");
+		Lw.d(TAG, "handleCheckPermissions");
 		try
 		{
 			getActiveNotifications();
 		}
 		catch (NullPointerException ex)
 		{
-			Log.e(TAG, "Got exception, have no permissions!");
+			Lw.e(TAG, "Got exception, have no permissions!");
 			reply(msg, Message.obtain(null, MSG_NO_PERMISSIONS, 0, 0));
 		}
 
@@ -73,7 +72,7 @@ public class NotificationReceiverService extends NotificationListenerService imp
 
 	private boolean handleListNotifications(Message msg)
 	{
-		Log.d(TAG, "handleListNotifications");
+		Lw.d(TAG, "handleListNotifications");
 		try
 		{
 			StatusBarNotification[] notifications = getActiveNotifications();
@@ -82,7 +81,7 @@ public class NotificationReceiverService extends NotificationListenerService imp
 			int idx = 0;
 			for (StatusBarNotification notification : notifications)
 			{
-				Log.d(TAG, "Sending info about notification " + notification);
+				Lw.d(TAG, "Sending info about notification " + notification);
 				val[idx++] = notification.getPackageName();
 			}
 
@@ -90,7 +89,7 @@ public class NotificationReceiverService extends NotificationListenerService imp
 		}
 		catch (NullPointerException ex)
 		{
-			Log.e(TAG, "Got exception, have no permissions!");
+			Lw.e(TAG, "Got exception, have no permissions!");
 			reply(msg, Message.obtain(null, MSG_NO_PERMISSIONS, 0, 0));
 		}
 		return true;
@@ -112,15 +111,15 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	public void onCreate()
 	{
 		super.onCreate();
-		Log.d(TAG, "onCreate()");
+		Lw.d(TAG, "onCreate()");
 
-		Log.d(TAG, "Alarm");
+		Lw.d(TAG, "AlarmReceiver");
 		alarm = new Alarm();
 
-		Log.d(TAG, "Settings");
+		Lw.d(TAG, "Settings");
 		settings = new Settings(this);
 
-		Log.d(TAG, "PackageSettings");
+		Lw.d(TAG, "PackageSettings");
 		pkgSettings = new PackageSettings(this);
 
 		CallStateTracker.start(this);
@@ -129,7 +128,7 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	@Override
 	public void onDestroy()
 	{
-		Log.d(TAG, "onDestroy (??)");
+		Lw.d(TAG, "onDestroy (??)");
 		super.onDestroy();
 	}
 
@@ -144,11 +143,11 @@ public class NotificationReceiverService extends NotificationListenerService imp
 
 	private void update(StatusBarNotification addedOrRemoved)
 	{
-		Log.d(TAG, "update");
+		Lw.d(TAG, "update");
 
 		if (!settings.isServiceEnabled())
 		{
-			Log.d(TAG, "Service is disabled, cancelling all the alarms and returning");
+			Lw.d(TAG, "Service is disabled, cancelling all the alarms and returning");
 			alarm.cancelAlarm(this);
 			return;
 		}
@@ -161,7 +160,7 @@ public class NotificationReceiverService extends NotificationListenerService imp
 		}
 		catch (NullPointerException ex)
 		{
-			Log.e(TAG, "Got exception, have no permissions!");
+			Lw.e(TAG, "Got exception while obtaining list of notifications, have no permissions!");
 		}
 
 		int cntHandledNotifications = 0;
@@ -170,77 +169,79 @@ public class NotificationReceiverService extends NotificationListenerService imp
 
 		if (notifications != null)
 		{
-			Log.d(TAG, "Total number of notifications currently active: " + notifications.length);
+			Lw.d(TAG, "Total number of notifications currently active: " + notifications.length);
 
 			for (StatusBarNotification notification : notifications)
 			{
-				// Log.d(TAG, "Checking notification" + notification);
-
+				Lw.d(TAG, "Checking notification" + notification);
 				String packageName = notification.getPackageName();
 
-				Log.d(TAG, "Package name is " + packageName);
+				Lw.d(TAG, "Package name is " + packageName);
 
 				PackageSettings.Package pkg = pkgSettings.getPackage(packageName);
 
 				if (pkg != null && pkg.isHandlingThis())
 				{
-					Log.d(TAG, "We are handling this!");
+					Lw.d(TAG, "We are handling this!");
 
 					++cntHandledNotifications;
 					if (pkg.getRemindIntervalSeconds() < minReminderInterval)
 					{
 						minReminderInterval = pkg.getRemindIntervalSeconds();
-						Log.d(TAG, "remind interval updated to " + minReminderInterval + " seconds");
+						Lw.d(TAG, "remind interval updated to " + minReminderInterval + " seconds");
 					}
 				}
 				else
 				{
 					if (pkg == null)
-						Log.d(TAG, "No settings for package " + packageName);
+						Lw.d(TAG, "No settings for package " + packageName);
 					else
-						Log.d(TAG, "There are settings for packageName: " + pkg);
+						Lw.d(TAG, "There are settings for packageName: " + pkg + ", but it is not currently handled");
 				}
 			}
 
-			Log.d(TAG, "Currently known packages: ");
-			List<PackageSettings.Package> all = pkgSettings.getAllPackages();
-
-			for (PackageSettings.Package pkg : all)
+			Lw.d(TAG, "Currently known packages: ");
+			for (PackageSettings.Package pkg : pkgSettings.getAllPackages())
 			{
-				Log.d(TAG, ">> " + pkg);
+				Lw.d(TAG, ">> " + pkg);
 			}
 		}
 		else
 		{
-			Log.e(TAG, "Can't get list of notifications. ");
+			Lw.e(TAG, "Can't get list of notifications. WE HAVE NO PERMISSION!! ");
 		}
 
 		if (cntHandledNotifications != 0)
 		{
-			// only (re)set alarm if added or removed notification is one of the
-			// handled notifications.
-			// otherwise alarm would be re-started each time the non-handled
-			// notification appears or disappears
-			// (which is incorrect)
-			//
-			// also we would force re-set alarm if addedOrUpdated is null, this means
-			// it is not being called from the callback, but it is an explicit request 
-			// from the UI
-
+			boolean restartTimer = false;
+			long nextAlarm = GlobalState.getNextAlarmTime(this);
+			
 			if (addedOrRemoved == null 
 					|| pkgSettings.isPackageHandled(addedOrRemoved.getPackageName()))
 			{
-				Log.d(TAG, "Firing alarm with interval " + minReminderInterval + " seconds");
-				alarm.setAlarm(this, minReminderInterval);
+				Lw.d(TAG, "Either explicit restart request or handled package notification added / removed - restarting timer");
+				restartTimer = true;
+			}
+			else if (System.currentTimeMillis() + 300 >= nextAlarm)
+			{
+				Lw.d(TAG, "Previous deadline has expired, re-starting timer");
+				restartTimer = true;
+			}
+
+			if (!restartTimer)
+			{
+				Lw.d(TAG, "Re-Ensuring alarm with interval " + minReminderInterval + " seconds to run at " + nextAlarm);
+				alarm.setAlarmMillis(this, nextAlarm, minReminderInterval * 1000);
 			}
 			else
 			{
-				Log.d(TAG, "Added/Removed notification is not handled, - not (Re)setting the alarm");
+				Lw.d(TAG, "(Re)Setting alarm with interval " + minReminderInterval + " seconds");
+				alarm.setAlarmMillis(this, minReminderInterval * 1000);	
 			}
 		}
 		else
 		{
-			Log.d(TAG, "Cancelling alarm, if any");
+			Lw.d(TAG, "Nothing to notify about, cancelling alarm, if any");
 			alarm.cancelAlarm(this);
 		}
 	}
@@ -248,14 +249,14 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	@Override
 	public void onNotificationPosted(StatusBarNotification arg0)
 	{
-		Log.d(TAG, "Notification posted: " + arg0);
+		Lw.d(TAG, "Notification posted: " + arg0);
 		update(arg0);
 	}
 
 	@Override
 	public void onNotificationRemoved(StatusBarNotification arg0)
 	{
-		Log.d(TAG, "Notification removed: " + arg0);
+		Lw.d(TAG, "Notification removed: " + arg0);
 		update(arg0);
 	}
 }

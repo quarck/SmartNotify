@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +35,7 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 
 	public void checkService()
 	{
+		Lw.d(TAG, "checkService() called");
 
 		// final PackageManager pm =
 		// getActivity().getPackageManager();
@@ -59,6 +59,8 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 	@Override
 	public void onNoPermissions()
 	{
+		Lw.d(TAG, "onNoPermissions()!!!");
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 		builder.setMessage(R.string.application_has_no_access)
 				.setPositiveButton(R.string.open_settings, new DialogInterface.OnClickListener()
@@ -75,6 +77,7 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 						getActivity().finish();
 					}
 				});
+
 		// Create the AlertDialog object and return it
 		builder.create().show();
 	}
@@ -85,11 +88,12 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 
 		if (pkg == null)
 		{
+			Lw.d(TAG, "Added reminde for " + packageName + " enabled: " + enabled + " delay: " + delay);
 			s.addPackage(s.new Package(packageName, enabled, delay));
 		}
 		else
 		{
-			Log.d(TAG, "Updating to send reminders every minute");
+			Lw.d(TAG, "Updating reminder for " + packageName + " enabled: " + enabled + " delay: " + delay);
 			pkg.setRemindIntervalSeconds(delay);
 			pkg.setHandlingThis(enabled);
 			s.updatePackage(pkg);
@@ -110,6 +114,8 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 
 	private void saveSettings(Settings settings, PackageSettings pkgSettings)
 	{
+		Lw.d(TAG, "Saving current settings");
+		
 		settings.setServiceEnabled(cbEnableService.isChecked());
 
 		try
@@ -123,15 +129,17 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 			set(pkgSettings, "com.google.android.gm", Integer.parseInt(editGmailInterval.getText().toString()) * 60,
 					cbHandleGmail.isChecked());
 
-			Log.d(TAG, "Currently known packages: ");
+			Lw.d(TAG, "Currently known packages: ");
 
 			for (PackageSettings.Package p : pkgSettings.getAllPackages())
 			{
-				Log.d(TAG, ">> " + p);
+				Lw.d(TAG, ">> " + p);
 			}
 		}
 		catch (Exception ex)
 		{
+			Lw.e(TAG, "Got exception while saving settings " + ex);
+	
 			AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 			builder.setMessage("Invalid number").setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
@@ -148,6 +156,8 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 
 	private void loadSettings(Settings settings, PackageSettings pkgSettings)
 	{
+		Lw.d(TAG, "loading settings");
+		
 		cbEnableService.setChecked(settings.isServiceEnabled());
 
 		cbHandleCal.setChecked(is(pkgSettings, "com.google.android.calendar"));
@@ -163,6 +173,8 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
+		Lw.d(TAG, "onCreateView");
+		
 		Settings settings = new Settings(getActivity());
 		PackageSettings pkgSettings = new PackageSettings(getActivity());
 
@@ -184,6 +196,8 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 		{
 			public void onClick(View arg0)
 			{
+				Lw.d("saveSettingsOnClickListener.onClick()");
+				
 				PackageSettings pkgSettings = new PackageSettings(getActivity());
 				Settings settings = new Settings(getActivity());
 				
@@ -215,7 +229,6 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 			{
 				Vibrator v = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
 				long[] pattern = {0,80,30,80,30,80,30,80,30,80,30,80,30,80,150,900};
-				Log.d(TAG, "Vibration pattern: " + pattern);
 				v.vibrate(pattern, -1);
 
 			}
@@ -226,6 +239,8 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 
 	public void onStart()
 	{
+		Lw.d(TAG, "onStart()");
+		
 		super.onStart();
 
 		serviceClient = new ServiceClient(this);
@@ -234,6 +249,8 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 
 	public void onStop()
 	{
+		Lw.d(TAG, "onStop()");
+		
 		serviceClient.unbindService(getActivity().getApplicationContext());
 
 		super.onStop();
@@ -242,6 +259,8 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 	@Override
 	public void onNotificationList(String[] notifications)
 	{
+		Lw.d(TAG, "OnNotificationList()");
+		
 		if (notifications != null)
 		{
 			StringBuilder sb = new StringBuilder();
@@ -264,11 +283,12 @@ public class MainFragment extends Fragment implements ServiceClient.Callback
 	@Override
 	public void onConnected()
 	{
+		Lw.d(TAG, "onConnected()");
 	}
 
 	@Override
 	public void onDisconnected()
 	{
+		Lw.d(TAG, "onDisconnected");
 	}
-
 }

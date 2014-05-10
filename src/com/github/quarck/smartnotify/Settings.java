@@ -56,7 +56,7 @@ public class Settings
 	{
 		return prefs.getInt(SILENT_TO_KEY, 5 * 60 + 30); // 5:30
 	}
-	
+
 	public boolean hasSilencePeriod()
 	{
 		return getSilenceFrom() != getSilenceTo();
@@ -96,7 +96,8 @@ public class Settings
 	{
 		try
 		{
-			String patternStr = prefs.getString(VIBRATION_PATTERN_KEY, "0,80,30,80,30,80,30,80,30,80,30,80,30,80,150,900");
+			String patternStr = prefs.getString(VIBRATION_PATTERN_KEY,
+					"0,80,30,80,30,80,30,80,30,80,30,80,30,80,150,900");
 
 			String[] times = patternStr.split(",");
 
@@ -111,11 +112,10 @@ public class Settings
 		}
 		catch (Exception ex)
 		{
+			Lw.d("Got exception while reading vibration pattern");
 		}
 
-		return new long[]
-		{
-				0, 1500
-		}; // very-very failback for the case when we've failed
+		return new long[] { 0, 1500 }; // very-very failback for the case when
+										// we've failed
 	}
 }
