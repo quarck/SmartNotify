@@ -12,6 +12,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class PackageSettings extends SQLiteOpenHelper
 {
 	private static final String TAG = "DB";
+	
+	public static final int DEFAULT_REMIND_INTERVAL = 5 * 60;
 
 	public class Package
 	{
@@ -56,6 +58,8 @@ public class PackageSettings extends SQLiteOpenHelper
 		public Package(String _packageName, boolean _handleThis, int _interval)
 		{
 			super();
+			if (_interval == 0)
+				_interval = DEFAULT_REMIND_INTERVAL;
 			packageName = _packageName;
 			handleThisPackage = _handleThis;
 			remindIntervalSeconds = _interval;
@@ -173,6 +177,9 @@ public class PackageSettings extends SQLiteOpenHelper
 			pkg = new Package(cursor.getString(0), Integer.parseInt(cursor
 					.getString(1)) != 0, Integer.parseInt(cursor.getString(2)));
 		}
+		
+		if (cursor != null)
+			cursor.close();
 
 		return pkg;
 	}
@@ -198,6 +205,8 @@ public class PackageSettings extends SQLiteOpenHelper
 				packages.add(pkg);
 			}
 			while (cursor.moveToNext());
+
+			cursor.close();
 		}
 
 		return packages;
@@ -223,7 +232,6 @@ public class PackageSettings extends SQLiteOpenHelper
 		db.close();
 
 		return i;
-
 	}
 
 	public void deletePackage(Package pkg)
@@ -241,4 +249,43 @@ public class PackageSettings extends SQLiteOpenHelper
 
 		Lw.d(TAG, "deletePackage "  + pkg.toString());
 	}
+	
+	
+	public void set(String packageName, int delay, boolean enabled)
+	{
+		Package pkg = getPackage(packageName);
+
+		if (pkg == null)
+		{
+			Lw.d(TAG, "Added reminde for " + packageName + " enabled: " + enabled + " delay: " + delay);
+			addPackage(new Package(packageName, enabled, delay));
+		}
+		else
+		{
+			Lw.d(TAG, "Updating reminder for " + packageName + " enabled: " + enabled + " delay: " + delay);
+			pkg.setRemindIntervalSeconds(delay);
+			pkg.setHandlingThis(enabled);
+			updatePackage(pkg);
+		}
+	}
+
+	public boolean getIsListed(String packageName)
+	{
+		Package pkg = getPackage(packageName);
+		return pkg != null;
+	}
+
+	public boolean getIsHandled(String packageName)
+	{
+		Package pkg = getPackage(packageName);
+		return pkg != null ? pkg.isHandlingThis() : false;
+	}
+
+	public int getInterval(String packageName)
+	{
+		Package pkg = getPackage(packageName);
+		return pkg != null ? pkg.getRemindIntervalSeconds() : DEFAULT_REMIND_INTERVAL;
+	}
+	
+	
 }

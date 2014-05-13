@@ -90,9 +90,9 @@ public class Alarm extends BroadcastReceiver
 
 	public void setAlarmMillis(Context context, long whenMillis, int repeatMillis)
 	{
-		Lw.d(TAG, "Setting alarm for " + whenMillis + ", repeat " + repeatMillis);
-		
 		cancelAlarm(context); // cancel previous alarm, if any, so we would not have two alarms
+		
+		Lw.d(TAG, "Setting alarm for " + whenMillis + ", repeat " + repeatMillis);
 		
 		GlobalState.setCurrentRemindInterval(context,  repeatMillis);
 		GlobalState.setNextAlarmTime(context, whenMillis);

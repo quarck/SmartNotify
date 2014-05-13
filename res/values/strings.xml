@@ -7,4 +7,9 @@
 	<string name="application_has_no_access">This application needs special permissions to be able to access list of notifications. Open Settings app to grant such access?</string>
 	<string name="open_settings">Open Settings</string>
 	<string name="cancel_quit">Cancel(Quit)</string>
+	<string name="action_edit_applications">Edit Applications</string>
+	
+	<string name="hide_btn">Btn</string>
+	<string name="hide_hide">HIDE</string>
+	<string name="hide_show">SHOW</string>
 </resources>
