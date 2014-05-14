@@ -55,7 +55,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 	private ArrayList<ApplicationPkgInfo> handledApplications = null;
 	
-	private CheckBox cbEnableService = null;
+	private ToggleButton tbEnableService = null;
 
 	private ListView listHandledApplications = null;
 
@@ -80,13 +80,14 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		
 	//	View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-		cbEnableService = (CheckBox) findViewById(R.id.checkBoxEnableService);
+		tbEnableService = (ToggleButton) findViewById(R.id.toggleButtonEnableService);
 
 		listHandledApplications = (ListView) findViewById(R.id.listApplications);
 		
 		settings = new Settings(this);
 		pkgSettings = new PackageSettings(this);
 
+		
 
 /*		listHandledApplications.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
@@ -125,12 +126,12 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 				saveSettings();
 
-				if (cbEnableService.isChecked())
+				if (tbEnableService.isChecked())
 					serviceClient.checkPermissions();
 			}
 		};
 
-		cbEnableService.setOnClickListener(saveSettingsOnClickListener);
+		tbEnableService.setOnClickListener(saveSettingsOnClickListener);
 
 		/*
 		 * ((Button)
@@ -206,7 +207,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 	{
 		Lw.d(TAG, "Saving current settings");
 
-		settings.setServiceEnabled(cbEnableService.isChecked());
+		settings.setServiceEnabled(tbEnableService.isChecked());
 
 		try
 		{
@@ -255,7 +256,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 	{
 		Lw.d(TAG, "loading settings");
 
-		cbEnableService.setChecked(settings.isServiceEnabled());
+		tbEnableService.setChecked(settings.isServiceEnabled());
 	}
 
 	
@@ -500,7 +501,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 				public void onClick(View btn)
 				{
 					Lw.d("saveSettingsOnClickListener.onClick()");
-
 //					appInfo.pkgInfo.setHandlingThis( ! appInfo.pkgInfo.isHandlingThis() );
 					appInfo.pkgInfo.setHandlingThis( ((ToggleButton)btn).isChecked() );
 				

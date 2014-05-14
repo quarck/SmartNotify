@@ -10,6 +10,6 @@
 	<string name="action_edit_applications">Edit Applications</string>
 	
 	<string name="hide_btn">Btn</string>
-	<string name="hide_hide">HIDE</string>
+	<string name="hide_hide">  HIDE  </string>
 	<string name="hide_show">SHOW</string>
 </resources>

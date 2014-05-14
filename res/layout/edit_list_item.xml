@@ -23,9 +23,9 @@
         android:layout_alignParentTop="true"
         android:layout_alignWithParentIfMissing="true"
         android:text="@string/hide_btn"
-        android:textOn="@string/hide_show"
         android:textOff="@string/hide_hide"
-        android:textSize="20sp" >
+        android:textOn="@string/hide_show"
+        android:textSize="16sp" >
 
         <requestFocus/>
     </ToggleButton>

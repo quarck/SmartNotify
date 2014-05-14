@@ -45,13 +45,13 @@ public class EditApplicationsActivity extends Activity
 	private ArrayList<AppSelectionInfo> listApps = new ArrayList<AppSelectionInfo>();
 	
 	private class AppSelectionInfo
-	{
+	{		
+		boolean loadComplete = false;
+	
 		boolean isSelected;
 		String name;
 		String packageName;
 		Drawable icon;
-		
-		boolean loadComplete = false;
 		
 		ApplicationInfo app;
 	}
