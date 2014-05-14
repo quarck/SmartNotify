@@ -1,6 +1,8 @@
 package com.github.quarck.smartnotify;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -139,6 +141,7 @@ public class EditApplicationsActivity extends Activity
 			
 			asi.packageName = app.packageName;			
 			asi.isSelected = pkgSettings.getIsListed( app.packageName );
+			asi.name = packageManager.getApplicationLabel(app).toString();
 			asi.app = app;
 			
 			Intent launchActivity = packageManager.getLaunchIntentForPackage(app.packageName);
@@ -156,6 +159,18 @@ public class EditApplicationsActivity extends Activity
 				otherApps.add(asi);
 			}	
 		}
+		
+		Comparator<AppSelectionInfo> comparator = new Comparator<AppSelectionInfo>() 
+		{
+			@Override
+	        public int compare(AppSelectionInfo  app1, AppSelectionInfo  app2)
+	        {
+	            return  app1.name.compareTo(app2.name);
+	        }
+	    };
+		
+		Collections.sort(handledApps, comparator);
+		Collections.sort(visibleApps, comparator);
 		
 		synchronized (this)
 		{
@@ -231,7 +246,7 @@ public class EditApplicationsActivity extends Activity
 					{
 						if (!appInfo.loadComplete)
 						{
-							appInfo.name = packageManager.getApplicationLabel(appInfo.app).toString();
+							//appInfo.name = packageManager.getApplicationLabel(appInfo.app).toString();							
 							appInfo.icon = appInfo.app.loadIcon(packageManager);
 							appInfo.loadComplete = true;
 						}
@@ -380,7 +395,7 @@ public class EditApplicationsActivity extends Activity
 				{
 					if (!appInfo.loadComplete)
 					{
-						appInfo.name = packageManager.getApplicationLabel(appInfo.app).toString();
+//						appInfo.name = packageManager.getApplicationLabel(appInfo.app).toString();
 						appInfo.icon = appInfo.app.loadIcon(packageManager);
 						appInfo.loadComplete = true;
 					}

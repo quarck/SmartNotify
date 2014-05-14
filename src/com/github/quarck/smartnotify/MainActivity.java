@@ -3,41 +3,32 @@
 package com.github.quarck.smartnotify;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
-import android.app.ActionBar;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
-import android.app.FragmentTransaction;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ToggleButton;
 
 public class MainActivity extends Activity implements ServiceClient.Callback
@@ -291,6 +282,18 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			
 			applications.add(ai);
 		}
+		
+		Comparator<ApplicationPkgInfo> comparator = new Comparator<ApplicationPkgInfo>() 
+		{
+			@Override
+	        public int compare(ApplicationPkgInfo  app1, ApplicationPkgInfo  app2)
+	        {
+	            return  app1.name.compareTo(app2.name);
+	        }
+	    };
+		
+		Collections.sort(applications, comparator);
+
 		
 		synchronized(this)
 		{

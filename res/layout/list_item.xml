@@ -35,7 +35,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:text="" 
-        android:textSize="16sp" >
+        android:textSize="18sp" >
         <requestFocus/>
     </ToggleButton>
     
