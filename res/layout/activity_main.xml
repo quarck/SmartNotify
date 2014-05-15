@@ -8,46 +8,46 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.github.quarck.smartnotify.MainActivity" >
 
-    <TextView
-	    android:id="@+id/textViewLblEnablePerApp"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_alignLeft="@+id/listApplications"
-        android:layout_alignParentTop="true"
-	    android:text="Select applications to handle:"
-	    android:textAppearance="?android:attr/textAppearanceLarge" />
-	
-	<ListView 
-    	android:id="@+id/listApplications"
-    	android:layout_width="fill_parent"
-    	android:layout_height="wrap_content"
-        android:layout_below="@+id/textViewLblEnablePerApp"
-        android:layout_above="@+id/toggleButtonEnableService"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-    	 />
-    
-    <ToggleButton
-        android:id="@+id/toggleButtonEnableService"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:text=""
-        android:textOn="ENABLED"
-        android:textOff="DISABLED"
-        android:textSize="20sp" >
-    </ToggleButton>
-	
 	<TextView
 	    android:id="@+id/textViewLblEnableSvcd"
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
 	    android:layout_alignBaseline="@+id/toggleButtonEnableService"
 	    android:layout_alignBottom="@+id/toggleButtonEnableService"
-	    android:layout_alignLeft="@+id/listApplications"
-	    android:layout_toLeftOf="@+id/toggleButtonEnableService"
-	    android:text="Notify Service: "
+	    android:layout_alignParentLeft="true"
+	    android:text="Service:"
 	    android:textAppearance="?android:attr/textAppearanceLarge" />
+    
+    <ToggleButton
+        android:id="@+id/toggleButtonEnableService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:text=""
+        android:textOn="ENABLED"
+        android:textOff="DISABLED"
+        android:textSize="20sp" 
+        >
+    </ToggleButton>
+	
+    <TextView
+	    android:id="@+id/textViewLblEnablePerAppSmallprint"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignLeft="@+id/listApplications"
+        android:layout_below="@+id/textViewLblEnableSvcd"
+	    android:text="Select below applications to handle:"
+	    android:textAppearance="?android:attr/textAppearanceSmall" />
+    	
+	<ListView 
+    	android:id="@+id/listApplications"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewLblEnablePerAppSmallprint"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+    	 />
+    
 	
 </RelativeLayout>

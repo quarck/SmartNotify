@@ -18,18 +18,24 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import android.widget.AdapterView.OnItemClickListener;
 
 public class MainActivity extends Activity implements ServiceClient.Callback
 {
@@ -68,8 +74,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		Lw.d(TAG, "onCreateView");
 
 		setContentView(R.layout.activity_main);
-		
-	//	View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
 		tbEnableService = (ToggleButton) findViewById(R.id.toggleButtonEnableService);
 
@@ -78,27 +82,15 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		settings = new Settings(this);
 		pkgSettings = new PackageSettings(this);
 
-		
-
-/*		listHandledApplications.setOnItemClickListener(new AdapterView.OnItemClickListener()
+	
+		listHandledApplications.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
-
 			@Override
 			public void onItemClick(AdapterView<?> parent, final View view, int position, long id)
 			{
-				final String item = (String) parent.getItemAtPosition(position);
-				view.animate().setDuration(2000).alpha(0).withEndAction(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						list.remove(item);
-						adapter.notifyDataSetChanged();
-						view.setAlpha(1);
-					}
-				});
+				((ListApplicationsAdapter)listHandledApplications.getAdapter()).onItemClicked(position);
 			}
-		}); */
+		});
 		
 		loadSettings(settings, pkgSettings);
 
@@ -124,24 +116,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 		tbEnableService.setOnClickListener(saveSettingsOnClickListener);
 
-		/*
-		 * ((Button)
-		 * rootView.findViewById(R.id.buttonCheckService)).setOnClickListener
-		 * (new OnClickListener() { public void onClick(View arg0) {
-		 * checkService(); }
-		 * 
-		 * });
-		 * 
-		 * ((Button)
-		 * rootView.findViewById(R.id.buttonConfigure)).setOnClickListener(new
-		 * OnClickListener() { public void onClick(View arg0) { Vibrator v =
-		 * (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
-		 * long[] pattern = {0,80,30,80,30,80,30,80,30,80,30,80,30,80,150,900};
-		 * v.vibrate(pattern, -1);
-		 * 
-		 * } });
-		 */	
-//		return rootView;
 	}
 
 	@Override
@@ -206,24 +180,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			{
 				pkgSettings.updatePackage(ai.pkgInfo);
 			}
-
-			/*
-			
-			pkgSettings.set("com.google.android.calendar",
-					Integer.parseInt(editCalInterval.getText().toString()) * 60, cbHandleCal.isChecked());
-			pkgSettings.set("com.android.mms", Integer.parseInt(editSMSInterval.getText().toString()) * 60,
-					cbHandleSMS.isChecked());
-			pkgSettings.set("com.android.phone", Integer.parseInt(editPhoneInterval.getText().toString()) * 60,
-					cbHandlePhone.isChecked());
-			pkgSettings.set("com.google.android.gm", Integer.parseInt(editGmailInterval.getText().toString()) * 60,
-					cbHandleGmail.isChecked());
-
-			Lw.d(TAG, "Currently known packages: ");
-
-			for (PackageSettings.Package p : pkgSettings.getAllPackages())
-			{
-				Lw.d(TAG, ">> " + p);
-			}*/
 		}
 		catch (Exception ex)
 		{
@@ -326,10 +282,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 				applications = handledApplications;
 			}
 			
-			listHandledApplications.setAdapter(
-					new ListApplicationsAdapter(
-							MainActivity.this, R.layout.list_item, applications));
-			
+			listHandledApplications.setAdapter(	new ListApplicationsAdapter(MainActivity.this, applications));
 
 			listHandledApplications.setSelection(0);
 			
@@ -434,46 +387,110 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		private final Context context;
 		
 		ArrayList<ApplicationPkgInfo> listApplications;
-
-		public ListApplicationsAdapter(Context ctx, int textViewResourceId, ArrayList<ApplicationPkgInfo> applications)
+		
+		public ListApplicationsAdapter(Context ctx, ArrayList<ApplicationPkgInfo> applications)
 		{
 			super();
-			
-			context = ctx;
-			
+			context = ctx;			
 			listApplications = applications;
 		}
 
+		public void onItemClicked(int position)
+		{
+			final ApplicationPkgInfo appInfo = listApplications.get(position); 
+			
+			AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+
+			alert.setTitle("Remind interval");
+			alert.setMessage("Reminding interval, minutes: ");
+
+			// Set an EditText view to get user input
+			final EditText input = new EditText(MainActivity.this);
+			input.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+
+			input.setText(String.valueOf(appInfo.pkgInfo.getRemindIntervalSeconds() / 60 ));
+			
+			alert.setView(input);
+
+			alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int whichButton)
+				{
+					Editable value = input.getText();
+
+					Lw.d(TAG, "got text: " + value.toString());
+					
+					try
+					{
+						int interval = Integer.valueOf(value.toString());
+						appInfo.pkgInfo.setRemindIntervalSeconds( interval * 60 );						
+						pkgSettings.updatePackage(appInfo.pkgInfo);
+						
+						Lw.d(TAG, "remind interval updated to " + interval + " for package " + appInfo.pkgInfo);
+					}
+					catch (Exception ex)
+					{
+					}
+				}
+			});
+
+			alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+			{
+				public void onClick(DialogInterface dialog, int whichButton)
+				{
+				}
+			});
+
+			alert.show();
+		}
+
+		@Override
 		public int getCount()
 		{
 			return listApplications.size();
 		}
 
+		@Override
 		public Object getItem(int position)
 		{
 			return listApplications.get(position);
 		}
 
+		@Override
 		public long getItemId(int position)
 		{
 			return position;
 		}
+		
+		@Override
+		public int getViewTypeCount()
+		{
+			return 2;
+		}
 
+		
+		@Override
+		public int getItemViewType(int position)	
+		{
+			return 0;
+		}
 		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent)
 		{
 			View rowView = convertView;
 			
-			if (rowView == null)
+			ViewHolderCollapsed viewHolder = rowView != null ? (ViewHolderCollapsed)rowView.getTag() : null;
+
+			if (viewHolder == null)
 			{
 				LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
 				rowView = inflater.inflate(R.layout.list_item, parent, false);
 
-				ViewHolder viewHolder = new ViewHolder();
+				viewHolder = new ViewHolderCollapsed();
 
-				viewHolder.textViewRemindInterval = (TextView) rowView.findViewById(R.id.textViewRemindInterval);				
+				viewHolder.textViewRemindInterval = (TextView) rowView.findViewById(R.id.textViewIntervalLabel);				
 				viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
 				viewHolder.imageViewAppIcon = (ImageView) rowView.findViewById(R.id.icon);
 				//viewHolder.checkBoxEnableForApp = (CheckBox) rowView.findViewById(R.id.checkBoxEnableForApp);				
@@ -483,9 +500,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			}
 			
 			final ApplicationPkgInfo appInfo = listApplications.get(position); // this would not change as well - why lookup twice then?
-			
-			ViewHolder viewHolder = (ViewHolder)rowView.getTag();
-			
+						
 			//viewHolder.checkBoxEnableForApp.setChecked( appInfo.pkgInfo.isHandlingThis());
 			viewHolder.btnEnableForApp.setChecked( appInfo.pkgInfo.isHandlingThis() );
 			viewHolder.textViewRemindInterval.setText("every " + (appInfo.pkgInfo.getRemindIntervalSeconds() / 60) + " mins (click to change)");
@@ -515,18 +530,25 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 			return rowView;
 		}	
+
+		public class ViewHolderCollapsed
+		{
+			ToggleButton btnEnableForApp;
+			TextView textViewRemindInterval;
+			TextView textViewAppName;
+			ImageView imageViewAppIcon;
+		}
+
+		public class ViewHolderExpanded
+		{
+			ToggleButton btnEnableForApp;
+			TextView textViewRemindInterval;
+			TextView textViewAppName;
+			ImageView imageViewAppIcon;
+		}
+
 	}
 
-	public class ViewHolder
-	{
-//		CheckBox checkBoxEnableForApp;
-		ToggleButton btnEnableForApp;
-		TextView textViewRemindInterval;
-		TextView textViewAppName;
-		ImageView imageViewAppIcon;
-		
-//		ApplicationPkgInfo appInfo;
-	}
 	
 	
 	/*private class ProcessListAdapter
