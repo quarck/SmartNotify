@@ -32,6 +32,7 @@ import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -92,7 +93,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			}
 		});
 		
-		loadSettings(settings, pkgSettings);
+		tbEnableService.setChecked(settings.isServiceEnabled());
 
 		
 		synchronized(this)
@@ -174,96 +175,62 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 		settings.setServiceEnabled(tbEnableService.isChecked());
 
-		try
-		{
-			for (ApplicationPkgInfo ai : handledApplications)
-			{
-				pkgSettings.updatePackage(ai.pkgInfo);
-			}
-		}
-		catch (Exception ex)
-		{
-			Lw.e(TAG, "Got exception while saving settings " + ex);
-
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setMessage("Invalid number").setPositiveButton("OK", new DialogInterface.OnClickListener()
-			{
-				public void onClick(DialogInterface dialog, int id)
-				{
-				}
-			});
-			builder.create().show();
-		}
-
 		if (serviceClient != null)
 			serviceClient.forceReloadConfig();
 	}
-
-	private void loadSettings(Settings settings, PackageSettings pkgSettings)
-	{
-		Lw.d(TAG, "loading settings");
-
-		tbEnableService.setChecked(settings.isServiceEnabled());
-	}
-
-	
-	
-	private void loadPackages()
-	{
-		PackageSettings pkgSettings = new PackageSettings(this);
-	
-		PackageManager packageManager = getPackageManager();
-
-		List<PackageSettings.Package> allPackages = pkgSettings.getAllPackages();
-		
-		ArrayList<ApplicationPkgInfo> applications = new ArrayList<ApplicationPkgInfo>();
-		
-		for (PackageSettings.Package pkg : allPackages)
-		{
-			ApplicationPkgInfo ai = new ApplicationPkgInfo();
-			ai.pkgInfo = pkg;
-			
-			ApplicationInfo pmAppInfo;
-			try
-			{
-				pmAppInfo = packageManager.getApplicationInfo(pkg.getPackageName(), PackageManager.GET_META_DATA);
-				ai.name = packageManager.getApplicationLabel(pmAppInfo).toString();
-				ai.icon = pmAppInfo.loadIcon(packageManager);
-			}
-			catch (NameNotFoundException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}			
-			
-			applications.add(ai);
-		}
-		
-		Comparator<ApplicationPkgInfo> comparator = new Comparator<ApplicationPkgInfo>() 
-		{
-			@Override
-	        public int compare(ApplicationPkgInfo  app1, ApplicationPkgInfo  app2)
-	        {
-	            return  app1.name.compareTo(app2.name);
-	        }
-	    };
-		
-		Collections.sort(applications, comparator);
-
-		
-		synchronized(this)
-		{
-			handledApplications =  applications;
-		}
-	}
-	
 
 	public class LoadPackagesTask extends AsyncTask<Void, Void, Void>
 	{
 		@Override
 		protected Void doInBackground(Void... params)
 		{
-			loadPackages();
+			Lw.d(TAG, "LoadPackagesTask::doInBackground");
+			
+			PackageSettings pkgSettings = new PackageSettings(MainActivity.this);
+			
+			PackageManager packageManager = getPackageManager();
+
+			List<PackageSettings.Package> allPackages = pkgSettings.getAllPackages();
+			
+			ArrayList<ApplicationPkgInfo> applications = new ArrayList<ApplicationPkgInfo>();
+			
+			for (PackageSettings.Package pkg : allPackages)
+			{
+				ApplicationPkgInfo ai = new ApplicationPkgInfo();
+				ai.pkgInfo = pkg;
+				
+				ApplicationInfo pmAppInfo;
+				try
+				{
+					pmAppInfo = packageManager.getApplicationInfo(pkg.getPackageName(), PackageManager.GET_META_DATA);
+					ai.name = packageManager.getApplicationLabel(pmAppInfo).toString();
+					ai.icon = pmAppInfo.loadIcon(packageManager);
+				}
+				catch (NameNotFoundException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}			
+				
+				applications.add(ai);
+			}
+			
+			Comparator<ApplicationPkgInfo> comparator = new Comparator<ApplicationPkgInfo>() 
+			{
+				@Override
+		        public int compare(ApplicationPkgInfo  app1, ApplicationPkgInfo  app2)
+		        {
+		            return  app1.name.compareTo(app2.name);
+		        }
+		    };
+			
+			Collections.sort(applications, comparator);
+
+			
+			synchronized(this)
+			{
+				handledApplications =  applications;
+			}
 			return null;
 		}
 
@@ -298,8 +265,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		}
 	}
 
-	
-	
+
 	@Override
 	public void onStart()
 	{
@@ -320,6 +286,8 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 	@Override 
 	public void onPause()
 	{
+		Lw.d(TAG, "onPause");
+
 		LoadPackagesTask loader;
 		
 		synchronized(this)
@@ -337,6 +305,8 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 	@Override 
 	public void onResume()
 	{
+		Lw.d(TAG, "onResume");
+
 		super.onResume();
 		
 		synchronized(this)
@@ -397,32 +367,41 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 		public void onItemClicked(int position)
 		{
+			Lw.d(TAG, "ListApplicationsAdapter::onItemClicked, pos=" + position);
+	
 			final ApplicationPkgInfo appInfo = listApplications.get(position); 
 			
 			AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
 
 			alert.setTitle("Remind interval");
-			alert.setMessage("Reminding interval, minutes: ");
 
 			// Set an EditText view to get user input
-			final EditText input = new EditText(MainActivity.this);
-			input.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
-
-			input.setText(String.valueOf(appInfo.pkgInfo.getRemindIntervalSeconds() / 60 ));
+//			final EditText input = new EditText(MainActivity.this);
+//			input.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+//			input.setText(String.valueOf(appInfo.pkgInfo.getRemindIntervalSeconds() / 60 ));
 			
-			alert.setView(input);
+			LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+			
+			View dialogView = inflater.inflate(R.layout.dlg_remind_interval, null);
+			
+			alert.setView(dialogView);
+			
+			final NumberPicker picker = (NumberPicker)dialogView.findViewById(R.id.numberPickerRemindInterval);
 
+			picker.setMinValue(1);
+			picker.setMaxValue(60);
+			picker.setValue(appInfo.pkgInfo.getRemindIntervalSeconds() / 60);
+			
 			alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int whichButton)
 				{
-					Editable value = input.getText();
-
-					Lw.d(TAG, "got text: " + value.toString());
+					int interval = picker.getValue();
+					
+					Lw.d(TAG, "got val: " + interval );//value.toString());
 					
 					try
 					{
-						int interval = Integer.valueOf(value.toString());
 						appInfo.pkgInfo.setRemindIntervalSeconds( interval * 60 );						
 						pkgSettings.updatePackage(appInfo.pkgInfo);
 						
@@ -431,6 +410,8 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 					catch (Exception ex)
 					{
 					}
+					
+					notifyDataSetChanged();
 				}
 			});
 
@@ -480,7 +461,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		{
 			View rowView = convertView;
 			
-			ViewHolderCollapsed viewHolder = rowView != null ? (ViewHolderCollapsed)rowView.getTag() : null;
+			ViewHolder viewHolder = rowView != null ? (ViewHolder)rowView.getTag() : null;
 
 			if (viewHolder == null)
 			{
@@ -488,7 +469,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 				
 				rowView = inflater.inflate(R.layout.list_item, parent, false);
 
-				viewHolder = new ViewHolderCollapsed();
+				viewHolder = new ViewHolder();
 
 				viewHolder.textViewRemindInterval = (TextView) rowView.findViewById(R.id.textViewIntervalLabel);				
 				viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
@@ -513,13 +494,12 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			if ( appInfo.icon != null)
 				viewHolder.imageViewAppIcon.setImageDrawable( appInfo.icon );
 			
-//			viewHolder.checkBoxEnableForApp.setOnClickListener(new OnClickListener()
 			viewHolder.btnEnableForApp.setOnClickListener(new OnClickListener()
 			{
 				public void onClick(View btn)
 				{
 					Lw.d("saveSettingsOnClickListener.onClick()");
-//					appInfo.pkgInfo.setHandlingThis( ! appInfo.pkgInfo.isHandlingThis() );
+
 					appInfo.pkgInfo.setHandlingThis( ((ToggleButton)btn).isChecked() );
 				
 					pkgSettings.updatePackage(appInfo.pkgInfo);
@@ -531,15 +511,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			return rowView;
 		}	
 
-		public class ViewHolderCollapsed
-		{
-			ToggleButton btnEnableForApp;
-			TextView textViewRemindInterval;
-			TextView textViewAppName;
-			ImageView imageViewAppIcon;
-		}
-
-		public class ViewHolderExpanded
+		public class ViewHolder
 		{
 			ToggleButton btnEnableForApp;
 			TextView textViewRemindInterval;
@@ -548,18 +520,4 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		}
 
 	}
-
-	
-	
-	/*private class ProcessListAdapter
-	{
-		public void toggle(int position)
-		{
-			mBoolView.set(position, !mBoolView.get(position));
-			notifyDataSetChanged();
-		}
-
-		private Context mContext;
-
-	} */
 }
