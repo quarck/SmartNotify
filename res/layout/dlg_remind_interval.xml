@@ -17,7 +17,7 @@
         android:layout_alignBaseline="@+id/numberPickerRemindInterval"
         android:layout_centerVertical="true"
         android:layout_toRightOf="@+id/numberPickerRemindInterval"
-        android:text="min"
+        android:text="@string/min"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
 </RelativeLayout>

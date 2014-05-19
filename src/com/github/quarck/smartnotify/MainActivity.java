@@ -132,7 +132,8 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		int id = item.getItemId();
 		if (id == R.id.action_settings)
 		{
-			return true;
+			Intent intent = new Intent(this, SettingsActivity.class);
+			startActivity(intent);
 		}
 		else if (id == R.id.action_edit_applications)
 		{
@@ -374,11 +375,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
 
 			alert.setTitle("Remind interval");
-
-			// Set an EditText view to get user input
-//			final EditText input = new EditText(MainActivity.this);
-//			input.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
-//			input.setText(String.valueOf(appInfo.pkgInfo.getRemindIntervalSeconds() / 60 ));
 			
 			LayoutInflater inflater = MainActivity.this.getLayoutInflater();
 			

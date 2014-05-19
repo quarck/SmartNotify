@@ -30,7 +30,7 @@
         <activity	
             android:name="com.github.quarck.smartnotify.EditApplicationsActivity"
             android:label="@string/app_name" 
-            android:parentActivityName="com.example.myfirstapp.MainActivity" >
+            android:parentActivityName="com.github.quarck.smartnotify.MainActivity" >
             <intent-filter/>
             
             <meta-data
@@ -38,6 +38,17 @@
 			        android:value="com.github.quarck.smartnotify.MainActivity" />
         </activity>
 
+        <activity	
+            android:name="com.github.quarck.smartnotify.SettingsActivity"
+            android:label="@string/app_name" 
+            android:parentActivityName="com.github.quarck.smartnotify.MainActivity" >
+            <intent-filter/>
+            
+            <meta-data
+			        android:name="android.support.PARENT_ACTIVITY"
+			        android:value="com.github.quarck.smartnotify.MainActivity" />
+        </activity>
+        
         <service android:name="com.github.quarck.smartnotify.NotificationReceiverService"
                  android:label="@string/app_name"
                  android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" >

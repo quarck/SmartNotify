@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Vibrator;
 
 public class Alarm extends BroadcastReceiver
@@ -75,16 +76,49 @@ public class Alarm extends BroadcastReceiver
 
 			if (fireReminder)
 			{
-				Lw.d(TAG, "Firing alarm finally");
-				Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-				long[] pattern = settings.getVibrationPattern();
-				v.vibrate(pattern, -1);
+				checkPhoneSilentAndFire(context, settings);
 			}
 		}
 		else
 		{
 			Lw.d(TAG, "Service is now got disabled, cancelling alarm");
 			cancelAlarm(context);
+		}
+	}
+	
+	private void checkPhoneSilentAndFire(Context ctx, Settings settings)
+	{
+		boolean mayFireVibration = false;
+		boolean mayFireSound = false;
+		
+		AudioManager am = (AudioManager)ctx.getSystemService(Context.AUDIO_SERVICE);
+
+		switch (am.getRingerMode()) 
+		{
+		    case AudioManager.RINGER_MODE_SILENT:
+				Lw.d(TAG, "checkPhoneSilentAndFire: AudioManager.RINGER_MODE_SILENT");
+		        break;
+		    case AudioManager.RINGER_MODE_VIBRATE:
+				Lw.d(TAG, "checkPhoneSilentAndFire: AudioManager.RINGER_MODE_VIBRATE");
+				mayFireVibration = true;
+		        break;
+		    case AudioManager.RINGER_MODE_NORMAL:
+				Lw.d(TAG, "checkPhoneSilentAndFire: AudioManager.RINGER_MODE_NORMAL");
+				mayFireVibration = mayFireSound = true;
+		        break;
+		}
+		
+		if (mayFireVibration)
+		{
+			Lw.d(TAG, "Firing vibro-alarm finally");
+			Vibrator v = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+			long[] pattern = settings.getVibrationPattern();
+			v.vibrate(pattern, -1);
+		}
+
+		if (mayFireSound)
+		{
+			Lw.d(TAG, "Sound notifications are not implemented yet");
 		}
 	}
 

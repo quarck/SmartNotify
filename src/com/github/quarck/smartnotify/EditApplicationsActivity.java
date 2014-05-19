@@ -3,40 +3,28 @@ package com.github.quarck.smartnotify;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.ToggleButton;
+import android.widget.CheckBox;
 
 public class EditApplicationsActivity extends Activity
 {
@@ -68,9 +56,6 @@ public class EditApplicationsActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-
-		
-		// TODO: http://developer.android.com/training/implementing-navigation/ancestral.html
 		
 		Lw.d(TAG, "onCreate");
 
@@ -80,27 +65,11 @@ public class EditApplicationsActivity extends Activity
 
 		listApplications = (ListView) findViewById(R.id.listAddApplications);
 
-//		http://www.vogella.com/tutorials/AndroidListView/article.html
-
 		ActionBar actionBar = getActionBar();
 		actionBar.setHomeButtonEnabled(true);
+		actionBar.setTitle("Show/Hide applications");
 		
-		
-//		ProgressBar progressBar = new ProgressBar(this);
-        
-	//	LinearLayout.LayoutParams layoutParams =
-      //  		new LinearLayout.LayoutParams(
-        //				LinearLayout.LayoutParams.WRAP_CONTENT, 
-        	//			LinearLayout.LayoutParams.WRAP_CONTENT, 
-     //   				Gravity.CENTER); 
-	//	layoutParams.gravity = Gravity.CENTER;
-//		progressBar.setLayoutParams(layoutParams);
-  //      progressBar.setIndeterminate(true);
         listApplications.setEmptyView((ProgressBar)findViewById(R.id.progressBarLoading));
-
-        // Must add the progress bar to the root of the layout
- //       ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
-   //     root.addView(progressBar);
 	}
 	
 	@Override
@@ -376,7 +345,7 @@ public class EditApplicationsActivity extends Activity
 
 				ViewHolder viewHolder = new ViewHolder();
 
-				viewHolder.btnShowHide = (ToggleButton) rowView.findViewById(R.id.toggleButtonShowApp);				
+				viewHolder.btnShowHide = (CheckBox) rowView.findViewById(R.id.checkBoxShowApp);				
 				viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
 				viewHolder.imageViewAppIcon = (ImageView) rowView.findViewById(R.id.editIcon);
 				//viewHolder.checkBoxEnableForApp = (CheckBox) rowView.findViewById(R.id.checkBoxEnableForApp);				
@@ -395,16 +364,12 @@ public class EditApplicationsActivity extends Activity
 				{
 					if (!appInfo.loadComplete)
 					{
-//						appInfo.name = packageManager.getApplicationLabel(appInfo.app).toString();
 						appInfo.icon = appInfo.app.loadIcon(packageManager);
 						appInfo.loadComplete = true;
 					}
 				}
 			}
-			
-//			viewHolder.checkBoxEnableForApp.setChecked( false );
-			//viewHolder.textViewRemindInterval.setText(appInfo.packageName);
-			
+						
 			viewHolder.btnShowHide.setChecked( pkgSettings.getIsListed(appInfo.packageName) );
 			
 			if (appInfo.name != null)
@@ -429,7 +394,7 @@ public class EditApplicationsActivity extends Activity
 				{
 					Lw.d("saveSettingsOnClickListener.onClick()");
 					
-					if (((ToggleButton)btn).isChecked() )
+					if (((CheckBox)btn).isChecked() )
 					{
 						// must show
 						pkgSettings.addPackage(
@@ -453,68 +418,9 @@ public class EditApplicationsActivity extends Activity
 
 	public class ViewHolder
 	{
-//		CheckBox checkBoxEnableForApp;
 		TextView textViewAppName;
 		ImageView imageViewAppIcon;
 		
-		ToggleButton btnShowHide;
-		
-//		AppSelectionInfo appInfo;
+		CheckBox btnShowHide;
 	}
-
-
 }
-
-
-
-/*
-private ActionMode.Callback mActionModeCallback = new ActionMode.Callback()
-{
-
-	// called when the action mode is created; startActionMode() was called
-	public boolean onCreateActionMode(ActionMode mode, Menu menu)
-	{
-		// Inflate a menu resource providing context menu items
-		MenuInflater inflater = mode.getMenuInflater();
-		// assumes that you have "contexual.xml" menu resources
-//		inflater.inflate(R.menu.rowselection, menu);
-		return true;
-	}
-
-	// the following method is called each time
-	// the action mode is shown. Always called after
-	// onCreateActionMode, but
-	// may be called multiple times if the mode is invalidated.
-	public boolean onPrepareActionMode(ActionMode mode, Menu menu)
-	{
-		return false; // Return false if nothing is done
-	}
-
-	// called when the user selects a contextual menu item
-	public boolean onActionItemClicked(ActionMode mode, MenuItem item)
-	{
-		switch (item.getItemId())
-		{
-//		case R.id.menuitem1_show:
-//			show();
-//			// the Action was executed, close the CAB
-//			mode.finish();
-//			return true;
-		default:
-			return false;
-		}
-	}
-
-	// called when the user exits the action mode
-	public void onDestroyActionMode(ActionMode mode)
-	{
-		mActionMode = null;
-		selectedItem = -1;
-	}
-};
-
-private void show()
-{
-	Toast.makeText(MyListActivityActionbar.this, String.valueOf(selectedItem), Toast.LENGTH_LONG).show();
-}
-*/

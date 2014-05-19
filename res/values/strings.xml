@@ -12,4 +12,9 @@
 	<string name="hide_btn">Btn</string>
 	<string name="hide_hide">  HIDE  </string>
 	<string name="hide_show">SHOW</string>
+	<string name="min">min</string>
+	
+	<string name="showhideapps">Show/Hide applications:</string>
+	
+	<string name="showhidefootnote">Applications to display on the main screen:</string>
 </resources>
