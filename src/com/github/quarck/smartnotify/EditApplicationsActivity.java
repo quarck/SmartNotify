@@ -3,6 +3,7 @@ package com.github.quarck.smartnotify;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 import android.app.ActionBar;
@@ -11,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -24,7 +26,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.CheckBox;
+import android.widget.ToggleButton;
 
 public class EditApplicationsActivity extends Activity
 {
@@ -96,10 +98,17 @@ public class EditApplicationsActivity extends Activity
 		List<ApplicationInfo> applications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
 
 		ArrayList<AppSelectionInfo> handledApps = new ArrayList<AppSelectionInfo>();
+		ArrayList<AppSelectionInfo> recentApps = new ArrayList<AppSelectionInfo>();
 		ArrayList<AppSelectionInfo> visibleApps = new ArrayList<AppSelectionInfo>();
 		ArrayList<AppSelectionInfo> otherApps = new ArrayList<AppSelectionInfo>();
 		
 		Lw.d(TAG, "Loading applications");
+	
+		String[] recentApplications = NotificationReceiverService.getRecentNotifications();
+		HashMap<String,Integer> recentAppsHash = new HashMap<String, Integer>();
+		
+		for(String recent : recentApplications)
+			recentAppsHash.put(recent, new Integer(1));
 		
 		for (ApplicationInfo app : applications)
 		{
@@ -108,8 +117,14 @@ public class EditApplicationsActivity extends Activity
 			if (app.packageName == null)
 				continue;
 			
-			asi.packageName = app.packageName;			
+			asi.packageName = app.packageName;	
+			
+			
 			asi.isSelected = pkgSettings.getIsListed( app.packageName );
+
+			if (!asi.isSelected && recentAppsHash.containsKey(asi.packageName))
+				continue; // skip, would be loaded separately
+			
 			asi.name = packageManager.getApplicationLabel(app).toString();
 			asi.app = app;
 			
@@ -129,6 +144,38 @@ public class EditApplicationsActivity extends Activity
 			}	
 		}
 		
+		Lw.d(TAG, "Recent applications below:");
+		
+		for (String recent : recentApplications)
+		{
+			Lw.d(TAG, "Recent app: " + recent);
+			
+			AppSelectionInfo asi = new AppSelectionInfo();
+			
+			asi.packageName = recent;	
+			
+			asi.isSelected = pkgSettings.getIsListed( recent );
+			
+			ApplicationInfo app;
+			try
+			{
+				app = packageManager.getApplicationInfo(recent, PackageManager.GET_META_DATA);
+				
+				asi.name = packageManager.getApplicationLabel(app).toString();
+				asi.app = app;
+				
+				Intent launchActivity = packageManager.getLaunchIntentForPackage(recent);
+				
+				recentApps.add(asi);
+				
+			}
+			catch (NameNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		Comparator<AppSelectionInfo> comparator = new Comparator<AppSelectionInfo>() 
 		{
 			@Override
@@ -139,12 +186,14 @@ public class EditApplicationsActivity extends Activity
 	    };
 		
 		Collections.sort(handledApps, comparator);
+		Collections.sort(recentApps, comparator);
 		Collections.sort(visibleApps, comparator);
 		
 		synchronized (this)
 		{
 			listApps.clear();
 			listApps.addAll(handledApps);
+			listApps.addAll(recentApps);
 			listApps.addAll(visibleApps);
 			//listApps.addAll(otherApps);
 		}
@@ -330,7 +379,6 @@ public class EditApplicationsActivity extends Activity
 		{
 			return position;
 		}
-
 		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent)
@@ -345,11 +393,10 @@ public class EditApplicationsActivity extends Activity
 
 				ViewHolder viewHolder = new ViewHolder();
 
-				viewHolder.btnShowHide = (CheckBox) rowView.findViewById(R.id.checkBoxShowApp);				
+				viewHolder.btnShowHide = (ToggleButton) rowView.findViewById(R.id.toggleButtonShowApp);				
 				viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
 				viewHolder.imageViewAppIcon = (ImageView) rowView.findViewById(R.id.editIcon);
 				//viewHolder.checkBoxEnableForApp = (CheckBox) rowView.findViewById(R.id.checkBoxEnableForApp);				
-
 
 				rowView.setTag(viewHolder);
 			}
@@ -394,7 +441,7 @@ public class EditApplicationsActivity extends Activity
 				{
 					Lw.d("saveSettingsOnClickListener.onClick()");
 					
-					if (((CheckBox)btn).isChecked() )
+					if (((ToggleButton)btn).isChecked() )
 					{
 						// must show
 						pkgSettings.addPackage(
@@ -421,6 +468,6 @@ public class EditApplicationsActivity extends Activity
 		TextView textViewAppName;
 		ImageView imageViewAppIcon;
 		
-		CheckBox btnShowHide;
+		ToggleButton btnShowHide;
 	}
 }

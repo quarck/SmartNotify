@@ -341,18 +341,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		}
 	}
 
-	@Override
-	public void onConnected()
-	{
-		Lw.d(TAG, "onConnected()");
-	}
-
-	@Override
-	public void onDisconnected()
-	{
-		Lw.d(TAG, "onDisconnected");
-	}
-
 	private class ListApplicationsAdapter extends BaseAdapter
 	{
 		private final Context context;
@@ -514,6 +502,11 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			TextView textViewAppName;
 			ImageView imageViewAppIcon;
 		}
+	}
 
+	@Override
+	public void onRecetNotificationsList(String[] recentNotifications)
+	{
+		// TODO Auto-generated method stub
 	}
 }

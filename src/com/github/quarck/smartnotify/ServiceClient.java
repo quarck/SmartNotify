@@ -24,11 +24,9 @@ public class ServiceClient implements Handler.Callback
 	{
 		abstract void onNoPermissions();
 
-		abstract void onConnected();
-
-		abstract void onDisconnected();
-
 		abstract void onNotificationList(String[] notificationList);
+		
+		abstract void onRecetNotificationsList(String[] recentNotifications);
 	}
 
 	private Callback callback;
@@ -48,6 +46,10 @@ public class ServiceClient implements Handler.Callback
 		case NotificationReceiverService.MSG_LIST_NOTIFICATIONS:
 			if (callback != null)
 				callback.onNotificationList((String[]) msg.obj);
+			break;
+		case NotificationReceiverService.MSG_LIST_RECENT_NOTIFICATIONS:
+			if (callback != null)
+				callback.onRecetNotificationsList((String[]) msg.obj);
 			break;
 		case NotificationReceiverService.MSG_NO_PERMISSIONS:
 			if (callback != null)
@@ -69,8 +71,8 @@ public class ServiceClient implements Handler.Callback
 			
 			mService = new Messenger(service);
 
-			if (callback != null)
-				callback.onConnected();
+//			if (callback != null)
+//				callback.onConnected();
 		}
 
 		public void onServiceDisconnected(ComponentName className)
@@ -79,8 +81,8 @@ public class ServiceClient implements Handler.Callback
 			
 			mService = null;
 
-			if (callback != null)
-				callback.onDisconnected();
+//			if (callback != null)
+//				callback.onDisconnected();
 		}
 	};
 
@@ -137,6 +139,11 @@ public class ServiceClient implements Handler.Callback
 	public void getListNotifications()
 	{
 		sendServiceReq(NotificationReceiverService.MSG_LIST_NOTIFICATIONS);
+	}
+
+	public void getListRecentNotifications()
+	{
+		sendServiceReq(NotificationReceiverService.MSG_LIST_RECENT_NOTIFICATIONS);
 	}
 
 	public void checkPermissions()

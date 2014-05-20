@@ -1,5 +1,9 @@
 package com.github.quarck.smartnotify;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -19,6 +23,7 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	public static final int MSG_NO_PERMISSIONS = 2;
 	public static final int MSG_LIST_NOTIFICATIONS = 3;
 	public static final int MSG_RELOAD_SETTINGS = 4;
+	public static final int MSG_LIST_RECENT_NOTIFICATIONS = 5;
 
 	private Alarm alarm = null;
 
@@ -27,7 +32,9 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	private Settings settings = null;
 
 	private PackageSettings pkgSettings = null;
-
+	
+	private static HashMap<String,Long> recentNotifications = new HashMap<String,Long>();
+	
 	@Override
 	public boolean handleMessage(Message msg)
 	{
@@ -48,6 +55,11 @@ public class NotificationReceiverService extends NotificationListenerService imp
 		case MSG_RELOAD_SETTINGS:
 			Lw.d(TAG, "Explicit request to reload config");
 			update(null);
+			break;
+			
+		case MSG_LIST_RECENT_NOTIFICATIONS:
+			Lw.d(TAG, "Req for recent notifications");
+			sendRecent(msg);
 			break;
 		}
 
@@ -92,6 +104,62 @@ public class NotificationReceiverService extends NotificationListenerService imp
 			Lw.e(TAG, "Got exception, have no permissions!");
 			reply(msg, Message.obtain(null, MSG_NO_PERMISSIONS, 0, 0));
 		}
+		return true;
+	}
+
+	private static void cleanupRecentNotifications()
+	{
+		long timeNow = System.currentTimeMillis();
+		
+		ArrayList<String> listToCleanup = new ArrayList<String>();
+		
+		for (HashMap.Entry<String, Long> entry : recentNotifications.entrySet()) 
+		{
+		    String key = entry.getKey();
+		    Long value = entry.getValue();
+		    
+		    if (timeNow - value.longValue() > 1000 * 3600 * 24 ) // older than 1 day
+		    {
+		    	listToCleanup.add(key);
+		    	recentNotifications.remove(key);
+		    }
+		}
+		
+		for (String key: listToCleanup)
+			recentNotifications.remove(key);
+	}
+	
+	public static String[] getRecentNotifications()
+	{
+		Lw.d(TAG, "getRecentNotifications");
+
+		String[] notifications = null;
+				
+		synchronized (NotificationReceiverService.class)
+		{
+			cleanupRecentNotifications();
+
+			notifications = new String[recentNotifications.size()];
+			
+			int idx = 0;
+			for (String key : recentNotifications.keySet()) 
+			{
+			    notifications[idx++] = key;
+			}
+		}
+		
+		return notifications;
+	}
+
+	private boolean sendRecent(Message msg)
+	{
+		Lw.d(TAG, "sendRecent");
+
+		String[] notifications = getRecentNotifications();
+
+		if (notifications != null)
+			reply(msg, Message.obtain(null, MSG_LIST_RECENT_NOTIFICATIONS, 0, 0, notifications));
+		
 		return true;
 	}
 
@@ -145,6 +213,20 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	{
 		Lw.d(TAG, "update");
 
+		if (addedOrRemoved != null)
+		{
+			synchronized (NotificationReceiverService.class)
+			{
+				recentNotifications.put(
+						addedOrRemoved.getPackageName(), 
+						System.currentTimeMillis()
+					);
+				
+				if (recentNotifications.size() > 100)
+					cleanupRecentNotifications();
+			}
+		}
+		
 		if (!settings.isServiceEnabled())
 		{
 			Lw.d(TAG, "Service is disabled, cancelling all the alarms and returning");
