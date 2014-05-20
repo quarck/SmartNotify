@@ -4,7 +4,7 @@
         android:key="pref_key_silence">\
         
         <CheckBoxPreference
-            android:key="enable_silence_hours"
+            android:key="pref_key_enable_silence_hours"
             android:summary="Select quiet time to not receive any notifications"
             android:title="Enable Silence Hours"
             android:defaultValue="false"  />
@@ -19,14 +19,16 @@
 	        android:defaultValue="@string/pref_syncConnectionTypes_default" / -->
 	    
 
-        <EditTextPreference android:key="silence_from"
-            android:dependency="enable_silence_hours"
+        <EditTextPreference 
+            android:key="pref_key_silence_from"
+            android:dependency="pref_key_enable_silence_hours"
             android:summary=""
             android:title="Silence from"
             android:defaultValue="21:00"  />
         
-        <EditTextPreference android:key="silence_to"
-            android:dependency="enable_silence_hours"
+        <EditTextPreference 
+            android:key="pref_key_silence_to"
+            android:dependency="pref_key_enable_silence_hours"
             android:summary=""
             android:title="Silence to"
             android:defaultValue="05:30"  />
@@ -35,15 +37,15 @@
 
      <PreferenceCategory 
         android:title="Notification"
-        android:key="pref_key_notification">\
+        android:key="pref_key_notification">
         
 
-        <EditTextPreference android:key="vibration_pattern"
+        <EditTextPreference android:key="pref_key_vibration_pattern"
             android:summary=""
             android:title="Vibration pattern"
             android:defaultValue="0,80,30,80,30,80,30,80,30,80,30,80,30,80,150,900"  />
         
-        <RingtonePreference android:key="ringtone"
+        <RingtonePreference android:key="pref_key_ringtone"
             android:summary=""
             android:title="Notification tone"/>
         

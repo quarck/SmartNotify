@@ -36,7 +36,7 @@ public class Alarm extends BroadcastReceiver
 
 			boolean fireReminder = true;
 
-			if (settings.hasSilencePeriod())
+			if (settings.isSilencePeriodEnabled() && settings.hasSilencePeriod())
 			{
 				Calendar cal = Calendar.getInstance();
 				int hour = cal.get(Calendar.HOUR_OF_DAY);
