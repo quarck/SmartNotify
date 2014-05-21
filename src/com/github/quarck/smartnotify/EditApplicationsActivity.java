@@ -90,6 +90,7 @@ public class EditApplicationsActivity extends Activity
 	}
 	
 	private static Applications listApps = null;
+	private static boolean forceReloadApplications = false;
 	
 	private class AppSelectionInfo
 	{		
@@ -150,8 +151,10 @@ public class EditApplicationsActivity extends Activity
 		synchronized (EditApplicationsActivity.class)
 		{
 			if (listApps != null)
-				onlyRefreshRecent = true; 
+				onlyRefreshRecent = !forceReloadApplications;
+			forceReloadApplications = false;
 		}
+		
 		
 		PackageSettings pkgSettings = new PackageSettings(this);
 	
@@ -221,24 +224,21 @@ public class EditApplicationsActivity extends Activity
 			
 			asi.isSelected = pkgSettings.getIsListed( recent );
 			
-			ApplicationInfo app;
-			try
-			{
-				app = packageManager.getApplicationInfo(recent, 0/*PackageManager.GET_META_DATA*/);
-				
-				asi.name = packageManager.getApplicationLabel(app).toString();
-				asi.app = app;
-				
-				Intent launchActivity = packageManager.getLaunchIntentForPackage(recent);
-				
-				recentApps.add(asi);
-				
-			}
-			catch (NameNotFoundException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			if (!asi.isSelected)
+				try
+				{
+					ApplicationInfo app = packageManager.getApplicationInfo(recent, 0/*PackageManager.GET_META_DATA*/);
+					
+					asi.name = packageManager.getApplicationLabel(app).toString();
+					asi.app = app;					
+					recentApps.add(asi);
+					
+				}
+				catch (NameNotFoundException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
 		
 		Comparator<AppSelectionInfo> comparator = new Comparator<AppSelectionInfo>() 
@@ -578,18 +578,24 @@ public class EditApplicationsActivity extends Activity
 					if (((CheckBox)btn).isChecked() )
 					{
 						// must show
-						pkgSettings.addPackage(
-								pkgSettings.new Package(
-										appInfo.packageName, false, 0
-								));
+						
+						pkgSettings.lookupEverywhereAndMoveOrInsertNew(appInfo.packageName, true, 0);
+						
+//                       pkgSettings.addPackage(
+  //                         pkgSettings.new Package(
+    //                           appInfo.packageName, false, 0
+      //                     ));
 					}
 					else
 					{
 						// must hide
 						PackageSettings.Package pkg = pkgSettings.getPackage(appInfo.packageName);
 						if (pkg != null)
-							pkgSettings.deletePackage(pkg);
+		//					pkgSettings.deletePackage(pkg);
+							pkgSettings.hidePackage(pkg);
 					}
+					
+					forceReloadApplications = true; // force to reload applist on the next open of the activity
 				}
 			});
 

@@ -74,12 +74,13 @@ public class PackageSettings extends SQLiteOpenHelper
 		}
 	}
 
-	private static final int DATABASE_VERSION = 2;
+	private static final int DATABASE_VERSION = 5;
 
 	private static final String DATABASE_NAME = "Packages";
 
 	private static final String TABLE_NAME = "packages";
 	private static final String INDEX_NAME = "pkgidx";
+	private static final String TABLE_DISABLED_NAME = "packages_disabled";
 
 	// private static final String KEY_ID = "id";
 	private static final String KEY_PACKAGE = "package";
@@ -107,6 +108,14 @@ public class PackageSettings extends SQLiteOpenHelper
 
 		db.execSQL(CREATE_PKG_TABLE);
 
+		CREATE_PKG_TABLE = "CREATE TABLE " + TABLE_DISABLED_NAME + " ( "
+				+ KEY_PACKAGE + " TEXT PRIMARY KEY, " + KEY_HANDLE + " INTEGER, "
+				+ KEY_INTERVAL + " INTEGER )";
+
+		Lw.d(TAG, "Creating DB TABLE_DISABLED using query: " + CREATE_PKG_TABLE);
+
+		db.execSQL(CREATE_PKG_TABLE);
+		
 		String CREATE_INDEX = "CREATE UNIQUE INDEX " + INDEX_NAME + " ON "
 				+ TABLE_NAME + " (" + KEY_PACKAGE + ")";
 
@@ -120,11 +129,12 @@ public class PackageSettings extends SQLiteOpenHelper
 	{
 		Lw.d(TAG, "DROPPING table and index");
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_DISABLED_NAME);
 		db.execSQL("DROP INDEX IF EXISTS " + INDEX_NAME);
 		this.onCreate(db);
 	}
 
-	public void addPackage(Package pkg)
+	public void addPackage(String tableName, Package pkg)
 	{
 		Lw.d(TAG, "addPackage " + pkg.toString());
 
@@ -135,7 +145,7 @@ public class PackageSettings extends SQLiteOpenHelper
 		values.put(KEY_HANDLE, pkg.isHandlingThis());
 		values.put(KEY_INTERVAL, pkg.getRemindIntervalSeconds());
 
-		db.insert(TABLE_NAME, // table
+		db.insert(tableName, // table
 				null, // nullColumnHack
 				values); // key/value -> keys = column names/ values = column
 							// values
@@ -145,18 +155,23 @@ public class PackageSettings extends SQLiteOpenHelper
 
 	public boolean isPackageHandled(String packageId)
 	{
-		Package pkg = getPackage(packageId);
+		Package pkg = getPackage(TABLE_NAME, packageId);
 		
 		return pkg != null && pkg.isHandlingThis();
 	}
-	
+
 	public Package getPackage(String packageId)
+	{
+		return getPackage(TABLE_NAME, packageId);
+	}
+
+	public Package getPackage(String tableName, String packageId)
 	{
 		SQLiteDatabase db = this.getReadableDatabase();
 
 		Lw.d(TAG, "getPackage" + packageId);
 
-		Cursor cursor = db.query(TABLE_NAME, // a. table
+		Cursor cursor = db.query(tableName, // a. table
 				COLUMNS, // b. column names
 				" " + KEY_PACKAGE + " = ?", // c. selections
 				new String[]
@@ -214,6 +229,11 @@ public class PackageSettings extends SQLiteOpenHelper
 
 	public int updatePackage(Package pkg)
 	{
+		return updatePackage(TABLE_NAME, pkg);
+	}
+
+	public int updatePackage(String tableName, Package pkg)
+	{
 		SQLiteDatabase db = this.getWritableDatabase();
 
 		ContentValues values = new ContentValues();
@@ -221,7 +241,7 @@ public class PackageSettings extends SQLiteOpenHelper
 		values.put(KEY_HANDLE, pkg.isHandlingThis());
 		values.put(KEY_INTERVAL, pkg.getRemindIntervalSeconds());
 
-		int i = db.update(TABLE_NAME, // table
+		int i = db.update(tableName, // table
 				values, // column/value
 				KEY_PACKAGE + " = ?", // selections
 				new String[]
@@ -234,7 +254,7 @@ public class PackageSettings extends SQLiteOpenHelper
 		return i;
 	}
 
-	public void deletePackage(Package pkg)
+	public void deletePackage(String tableName, Package pkg)
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
 
@@ -253,39 +273,70 @@ public class PackageSettings extends SQLiteOpenHelper
 	
 	public void set(String packageName, int delay, boolean enabled)
 	{
-		Package pkg = getPackage(packageName);
+		Package pkg = getPackage(TABLE_NAME, packageName);
 
 		if (pkg == null)
 		{
 			Lw.d(TAG, "Added reminde for " + packageName + " enabled: " + enabled + " delay: " + delay);
-			addPackage(new Package(packageName, enabled, delay));
+			addPackage(TABLE_NAME, new Package(packageName, enabled, delay));
 		}
 		else
 		{
 			Lw.d(TAG, "Updating reminder for " + packageName + " enabled: " + enabled + " delay: " + delay);
 			pkg.setRemindIntervalSeconds(delay);
 			pkg.setHandlingThis(enabled);
-			updatePackage(pkg);
+			updatePackage(TABLE_NAME, pkg);
 		}
 	}
 
 	public boolean getIsListed(String packageName)
 	{
-		Package pkg = getPackage(packageName);
+		Package pkg = getPackage(TABLE_NAME, packageName);
 		return pkg != null;
 	}
 
 	public boolean getIsHandled(String packageName)
 	{
-		Package pkg = getPackage(packageName);
+		Package pkg = getPackage(TABLE_NAME, packageName);
 		return pkg != null ? pkg.isHandlingThis() : false;
 	}
 
 	public int getInterval(String packageName)
 	{
-		Package pkg = getPackage(packageName);
+		Package pkg = getPackage(TABLE_NAME, packageName);
 		return pkg != null ? pkg.getRemindIntervalSeconds() : DEFAULT_REMIND_INTERVAL;
 	}
 	
+	public Package lookupEverywhereAndMoveOrInsertNew(String packageName, boolean _handleThis, int _interval)
+	{
+		Package pkg = getPackage(TABLE_NAME, packageName);
+		
+		if (pkg != null)
+		{
+			// nothing to do, it is already inside the main table
+		}
+		else
+		{
+			pkg = getPackage(TABLE_DISABLED_NAME, packageName);
 	
+			if (pkg != null)
+			{
+				deletePackage(TABLE_DISABLED_NAME, pkg); // delete it from the "disabled" table
+			}
+			else
+			{
+				pkg = new Package(packageName, _handleThis, _interval);
+			}
+
+			addPackage(TABLE_NAME, pkg);
+		}
+		
+		return pkg;
+	}
+	
+	public void hidePackage(Package pkg)
+	{
+		deletePackage(TABLE_NAME, pkg);
+		addPackage(TABLE_DISABLED_NAME, pkg);
+	}
 }
