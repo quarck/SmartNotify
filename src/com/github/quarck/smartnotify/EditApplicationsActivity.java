@@ -38,24 +38,53 @@ public class EditApplicationsActivity extends Activity
 	
 	private static class Applications
 	{
-		public ArrayList<AppSelectionInfo> handledApps;
-		public ArrayList<AppSelectionInfo> recentApps;
-		public ArrayList<AppSelectionInfo> visibleApps;
-		public ArrayList<AppSelectionInfo> otherApps;
+		private ArrayList<AppSelectionInfo> handledApps;
+		private ArrayList<AppSelectionInfo> recentApps;
+		private ArrayList<AppSelectionInfo> visibleApps;
 		
-		public ArrayList<AppSelectionInfo> getAll()
+		private ArrayList<ArrayList<AppSelectionInfo>> all;
+		
+		public Applications(
+				ArrayList<AppSelectionInfo> handled, 
+				ArrayList<AppSelectionInfo> recent, 
+				ArrayList<AppSelectionInfo> visible
+			)
+		{
+			all = new ArrayList<ArrayList<AppSelectionInfo>>();
+			
+			handledApps = handled;
+			recentApps = recent;
+			visibleApps = visible;
+			
+			all.add(handledApps);
+			all.add(recentApps);
+			all.add(visibleApps);
+		}
+		
+		public void setRecent(ArrayList<AppSelectionInfo> recent)
+		{
+			recentApps = recent;
+			all.set(1, recentApps);
+		}
+		
+		@SuppressWarnings("unused")
+		public ArrayList<AppSelectionInfo> getHandledApps() { return handledApps; }
+		
+		@SuppressWarnings("unused")
+		public ArrayList<AppSelectionInfo> getRecentApps() { return recentApps; }
+
+		@SuppressWarnings("unused")
+		public ArrayList<AppSelectionInfo> getVisibleApps() { return visibleApps; }
+
+		public ArrayList<ArrayList<AppSelectionInfo>> getAll() { return all; }
+		
+		public ArrayList<AppSelectionInfo> getAllFlat()
 		{
 			ArrayList<AppSelectionInfo> ret = new ArrayList<AppSelectionInfo>();
-			
-			if (handledApps != null)
-				ret.addAll(handledApps);
-			if (recentApps != null)
-				ret.addAll(recentApps);
-			if (visibleApps != null)
-				ret.addAll(visibleApps);
-			if (otherApps != null)
-				ret.addAll(otherApps);
-			
+
+			for(ArrayList<AppSelectionInfo> list : all)
+				ret.addAll(list);
+
 			return ret;
 		}
 	}
@@ -117,57 +146,67 @@ public class EditApplicationsActivity extends Activity
 
 	private void loadApplications()
 	{
+		boolean onlyRefreshRecent = false;
+		synchronized (EditApplicationsActivity.class)
+		{
+			if (listApps != null)
+				onlyRefreshRecent = true; 
+		}
+		
 		PackageSettings pkgSettings = new PackageSettings(this);
 	
 		PackageManager packageManager = getPackageManager();
 
-		List<ApplicationInfo> applications = packageManager.getInstalledApplications(0/*PackageManager.GET_META_DATA*/);
-
 		ArrayList<AppSelectionInfo> handledApps = new ArrayList<AppSelectionInfo>();
 		ArrayList<AppSelectionInfo> recentApps = new ArrayList<AppSelectionInfo>();
 		ArrayList<AppSelectionInfo> visibleApps = new ArrayList<AppSelectionInfo>();
-		ArrayList<AppSelectionInfo> otherApps = new ArrayList<AppSelectionInfo>();
 		
+		String[] recentApplications = NotificationReceiverService.getRecentNotifications();
+
 		Lw.d(TAG, "Loading applications");
 	
-		String[] recentApplications = NotificationReceiverService.getRecentNotifications();
-		HashMap<String,Integer> recentAppsHash = new HashMap<String, Integer>();
-		
-		for(String recent : recentApplications)
-			recentAppsHash.put(recent, new Integer(1)); // LINQ, I miss you!
-		
-		for (ApplicationInfo app : applications)
-		{
-			AppSelectionInfo asi = new AppSelectionInfo();
+		if (!onlyRefreshRecent)
+		{	
+			HashMap<String,Integer> recentAppsHash = new HashMap<String, Integer>();
+	
+			List<ApplicationInfo> applications = packageManager.getInstalledApplications(0/*PackageManager.GET_META_DATA*/);
 			
-			if (app.packageName == null)
-				continue;
+			for(String recent : recentApplications)
+				recentAppsHash.put(recent, new Integer(1)); // LINQ, I miss you!
 			
-			asi.packageName = app.packageName;	
-			
-			
-			asi.isSelected = pkgSettings.getIsListed( app.packageName );
-
-			if (!asi.isSelected && recentAppsHash.containsKey(asi.packageName))
-				continue; // skip, would be loaded separately
-			
-			asi.name = packageManager.getApplicationLabel(app).toString();
-			asi.app = app;
-			
-			Intent launchActivity = packageManager.getLaunchIntentForPackage(app.packageName);
-			
-			if (asi.isSelected)
+			for (ApplicationInfo app : applications)
 			{
-				handledApps.add(asi);
+				AppSelectionInfo asi = new AppSelectionInfo();
+				
+				if (app.packageName == null)
+					continue;
+				
+				asi.packageName = app.packageName;	
+				
+				
+				asi.isSelected = pkgSettings.getIsListed( app.packageName );
+	
+				if (!asi.isSelected && recentAppsHash.containsKey(asi.packageName))
+					continue; // skip, would be loaded separately
+				
+				asi.name = packageManager.getApplicationLabel(app).toString();
+				asi.app = app;
+				
+				Intent launchActivity = packageManager.getLaunchIntentForPackage(app.packageName);
+				
+				if (asi.isSelected)
+				{
+					handledApps.add(asi);
+				}
+				else if (launchActivity != null)
+				{
+					visibleApps.add(asi);
+				}
+				else
+				{
+					//otherApps.add(asi);
+				}	
 			}
-			else if (launchActivity != null)
-			{
-				visibleApps.add(asi);
-			}
-			else
-			{
-				otherApps.add(asi);
-			}	
 		}
 		
 		Lw.d(TAG, "Recent applications below:");
@@ -210,20 +249,27 @@ public class EditApplicationsActivity extends Activity
 	            return  app1.name.compareTo(app2.name);
 	        }
 	    };
-		
-		Collections.sort(handledApps, comparator);
-		Collections.sort(recentApps, comparator);
-		Collections.sort(visibleApps, comparator);
-		
-		synchronized (EditApplicationsActivity.class)
-		{
-			listApps = new Applications();
+
+	    if (!onlyRefreshRecent)
+	    {
+			Collections.sort(handledApps, comparator);
+			Collections.sort(recentApps, comparator);
+			Collections.sort(visibleApps, comparator);
 			
-			listApps.handledApps = handledApps;
-			listApps.recentApps = recentApps;
-			listApps.visibleApps = visibleApps;
-			listApps.otherApps = otherApps;
-		}
+			synchronized (EditApplicationsActivity.class)
+			{
+				listApps = new Applications(handledApps, recentApps, visibleApps);
+			}
+	    }
+	    else
+	    {
+	    	Collections.sort(recentApps, comparator);
+
+	    	synchronized (EditApplicationsActivity.class)
+			{
+				listApps.setRecent(recentApps);
+			}
+	    }
 	}
 	
 	public class LoadApplicationsTask extends AsyncTask<Void, Void, Void>
@@ -281,7 +327,7 @@ public class EditApplicationsActivity extends Activity
 			ArrayList<AppSelectionInfo> apps = null;
 			synchronized (EditApplicationsActivity.this)
 			{
-				apps = listApps.getAll();
+				apps = listApps.getAllFlat();
 			}
 			
 			for (AppSelectionInfo appInfo: apps)
@@ -388,7 +434,7 @@ public class EditApplicationsActivity extends Activity
 			applications = apps;
 			
 			Lw.d(TAG, "Adding list of applications:");
-			for(AppSelectionInfo asi : applications.getAll())
+			for(AppSelectionInfo asi : applications.getAllFlat())
 			{
 				Lw.d(TAG, " ... " + asi.packageName );
 			}
@@ -404,124 +450,61 @@ public class EditApplicationsActivity extends Activity
 		public int getCount()
 		{
 			int size = 0;
-			if (applications.handledApps != null)
+
+			for (ArrayList<AppSelectionInfo> list : applications.getAll())
 			{
-				if (applications.handledApps.size() > 0)
+				if (list.size() > 0)
 				{
-					size += 1 + applications.handledApps.size();
+					size += 1 + list.size();
 				}
 			}
-			if (applications.recentApps != null)
-			{
-				if (applications.recentApps.size() > 0)
-				{
-					size += 1 + applications.recentApps.size();
-				}
-			}
-			if (applications.visibleApps != null)
-			{
-				if (applications.visibleApps.size() > 0)
-				{
-					size += 1 + applications.visibleApps.size();
-				}
-			}
-			
 			return size;
 		}
 		
 		public int getItemViewType(int position)
 		{
-			if (applications.handledApps != null)
+			for (ArrayList<AppSelectionInfo> list : applications.getAll())
 			{
-				if (applications.handledApps.size() > 0)
+				if (list.size() > 0)
 				{
 					if (position == 0 )
 						return 1;
 					position --;
 					
-					if (position < applications.handledApps.size())
+					if (position < list.size())
 						return 0;
 					
-					position -= applications.handledApps.size();
+					position -= list.size();
 				}
 			}
-			if (applications.recentApps != null)
-			{
-				if (applications.recentApps.size() > 0)
-				{
-					if (position == 0 )
-						return 1;
-					position --;
-					
-					if (position < applications.recentApps.size())
-						return 0;
-					
-					position -= applications.recentApps.size();
-				}
-			}
-			if (applications.visibleApps != null)
-			{
-				if (applications.visibleApps.size() > 0)
-				{
-					if (position == 0 )
-						return 1;
-					position --;
-					
-					if (position < applications.visibleApps.size())
-						return 0;
-					
-					position -= applications.visibleApps.size();
-				}
-			}
-			
+
 			return 0;			
 		}
 
 		public Object getItem(int position)
 		{
+			String[] titles = {
+					"HANDLED APPLICATIONS", 
+					"RECENT NOTIFICATIONS", 
+					"OTHER APPLICATIONS"
+				};
 			Object ret = null;
-			
-			if (applications.handledApps != null)
+
+			int titleIdx = 0;
+			for (ArrayList<AppSelectionInfo> list : applications.getAll())
 			{
-				if (applications.handledApps.size() > 0)
+				if (list.size() > 0)
 				{
 					if (position == 0 )
-						return new String("Handled Applications");
+						return titles[titleIdx];
 					position --;
 					
-					if (position < applications.handledApps.size())
-						return applications.handledApps.get(position);
+					if (position < list.size())
+						return list.get(position);
 					
-					position -= applications.handledApps.size();
+					position -= list.size();
 				}
-			}
-			if (applications.recentApps != null)
-			{
-				if (applications.recentApps.size() > 0)
-				{
-					if (position == 0 )
-						return new String("Recent Notifications");
-					position --;
-					
-					if (position < applications.recentApps.size())
-						return applications.recentApps.get(position);
-					
-					position -= applications.recentApps.size();
-				}
-			}
-			if (applications.visibleApps != null)
-			{
-				if (applications.visibleApps.size() > 0)
-				{
-					if (position == 0 )
-						return new String("Other Applications");
-					position --;
-					
-					if (position < applications.visibleApps.size())
-						return applications.visibleApps.get(position);
-					
-					position -= applications.visibleApps.size();
-				}
+				titleIdx ++;
 			}
 			
 			return null;
@@ -531,106 +514,116 @@ public class EditApplicationsActivity extends Activity
 		{
 			return position;
 		}
+
+		public View getItemView(int position, View convertView, ViewGroup parent)
+		{
+			View rowView = convertView;
+			
+			if (rowView == null)
+			{
+				LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				
+				rowView = inflater.inflate(R.layout.edit_list_item, parent, false);
+
+				ViewHolder viewHolder = new ViewHolder();
+
+				viewHolder.btnShowHide = (ToggleButton) rowView.findViewById(R.id.toggleButtonShowApp);				
+				viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
+				viewHolder.imageViewAppIcon = (ImageView) rowView.findViewById(R.id.editIcon);
+				//viewHolder.checkBoxEnableForApp = (CheckBox) rowView.findViewById(R.id.checkBoxEnableForApp);				
+
+				rowView.setTag(viewHolder);
+			}
+						
+			ViewHolder viewHolder = (ViewHolder)rowView.getTag();
+			
+			final AppSelectionInfo appInfo = (AppSelectionInfo)getItem(position);
+			
+			if (!appInfo.loadComplete)
+			{
+				synchronized (appInfo)
+				{
+					if (!appInfo.loadComplete)
+					{
+						appInfo.icon = appInfo.app.loadIcon(packageManager);
+						appInfo.loadComplete = true;
+					}
+				}
+			}
+						
+			viewHolder.btnShowHide.setChecked( pkgSettings.getIsListed(appInfo.packageName) );
+			
+			if (appInfo.name != null)
+				viewHolder.textViewAppName.setText(appInfo.name);
+			else
+				viewHolder.textViewAppName.setText(appInfo.packageName);
+
+			if ( appInfo.icon != null)
+				try
+				{
+					appInfo.icon.setBounds(0, 0, 12, 12);
+					viewHolder.imageViewAppIcon.setImageDrawable( appInfo.icon );
+				}
+				catch (Exception ex)
+				{
+					ex.printStackTrace();
+				}
+
+			viewHolder.btnShowHide.setOnClickListener(new OnClickListener()
+			{
+				public void onClick(View btn)
+				{
+					Lw.d("saveSettingsOnClickListener.onClick()");
+					
+					if (((ToggleButton)btn).isChecked() )
+					{
+						// must show
+						pkgSettings.addPackage(
+								pkgSettings.new Package(
+										appInfo.packageName, false, 0
+								));
+					}
+					else
+					{
+						// must hide
+						PackageSettings.Package pkg = pkgSettings.getPackage(appInfo.packageName);
+						if (pkg != null)
+							pkgSettings.deletePackage(pkg);
+					}
+				}
+			});
+
+			return rowView;
+		}
+
+		public View getTitleView(int position, View convertView, ViewGroup parent)
+		{
+			View rowView = convertView;
+			
+			if (rowView == null)
+			{
+				LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);					
+				rowView = inflater.inflate(R.layout.edit_list_item_title, parent, false);					
+			}
+			
+			TextView text = (TextView)rowView.findViewById(R.id.textViewGroupTitle);
+			
+			final String title  = (String)getItem(position);
+			text.setText(title);
+								
+			return rowView;				
+		}
 		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent)
 		{
 			if (getItemViewType(position) == 0 )
 			{
-				View rowView = convertView;
-				
-				if (rowView == null)
-				{
-					LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-					
-					rowView = inflater.inflate(R.layout.edit_list_item, parent, false);
-	
-					ViewHolder viewHolder = new ViewHolder();
-	
-					viewHolder.btnShowHide = (ToggleButton) rowView.findViewById(R.id.toggleButtonShowApp);				
-					viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
-					viewHolder.imageViewAppIcon = (ImageView) rowView.findViewById(R.id.editIcon);
-					//viewHolder.checkBoxEnableForApp = (CheckBox) rowView.findViewById(R.id.checkBoxEnableForApp);				
-	
-					rowView.setTag(viewHolder);
-				}
-							
-				ViewHolder viewHolder = (ViewHolder)rowView.getTag();
-				
-				final AppSelectionInfo appInfo = (AppSelectionInfo)getItem(position);
-				
-				if (!appInfo.loadComplete)
-				{
-					synchronized (appInfo)
-					{
-						if (!appInfo.loadComplete)
-						{
-							appInfo.icon = appInfo.app.loadIcon(packageManager);
-							appInfo.loadComplete = true;
-						}
-					}
-				}
-							
-				viewHolder.btnShowHide.setChecked( pkgSettings.getIsListed(appInfo.packageName) );
-				
-				if (appInfo.name != null)
-					viewHolder.textViewAppName.setText(appInfo.name);
-				else
-					viewHolder.textViewAppName.setText(appInfo.packageName);
-	
-				if ( appInfo.icon != null)
-					try
-					{
-						appInfo.icon.setBounds(0, 0, 12, 12);
-						viewHolder.imageViewAppIcon.setImageDrawable( appInfo.icon );
-					}
-					catch (Exception ex)
-					{
-						ex.printStackTrace();
-					}
-	
-				viewHolder.btnShowHide.setOnClickListener(new OnClickListener()
-				{
-					public void onClick(View btn)
-					{
-						Lw.d("saveSettingsOnClickListener.onClick()");
-						
-						if (((ToggleButton)btn).isChecked() )
-						{
-							// must show
-							pkgSettings.addPackage(
-									pkgSettings.new Package(
-											appInfo.packageName, false, 0
-									));
-						}
-						else
-						{
-							// must hide
-							PackageSettings.Package pkg = pkgSettings.getPackage(appInfo.packageName);
-							if (pkg != null)
-								pkgSettings.deletePackage(pkg);
-						}
-					}
-				});
-	
-				return rowView;
+				return getItemView(position, convertView, parent);
 			}
 			else
 			{
-				View rowView = convertView;
-				
-				if (rowView == null)
-				{
-					LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);					
-					rowView = inflater.inflate(R.layout.edit_list_item_title, parent, false);					
-				}
-				
-				TextView text = (TextView)rowView.findViewById(R.id.textViewGroupTitle);
-				
-				final String title  = (String)getItem(position);
-				text.setText(title);
-									
-				return rowView;				
+				return getTitleView(position, convertView, parent);
 			}
 		}	
 	}
