@@ -26,7 +26,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.ToggleButton;
+import android.widget.CheckBox;
 
 public class EditApplicationsActivity extends Activity
 {
@@ -527,7 +527,7 @@ public class EditApplicationsActivity extends Activity
 
 				ViewHolder viewHolder = new ViewHolder();
 
-				viewHolder.btnShowHide = (ToggleButton) rowView.findViewById(R.id.toggleButtonShowApp);				
+				viewHolder.btnShowHide = (CheckBox) rowView.findViewById(R.id.checkBoxShowApp);				
 				viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
 				viewHolder.imageViewAppIcon = (ImageView) rowView.findViewById(R.id.editIcon);
 				//viewHolder.checkBoxEnableForApp = (CheckBox) rowView.findViewById(R.id.checkBoxEnableForApp);				
@@ -561,7 +561,7 @@ public class EditApplicationsActivity extends Activity
 			if ( appInfo.icon != null)
 				try
 				{
-					appInfo.icon.setBounds(0, 0, 12, 12);
+			//		appInfo.icon.setBounds(0, 0, 12, 12);
 					viewHolder.imageViewAppIcon.setImageDrawable( appInfo.icon );
 				}
 				catch (Exception ex)
@@ -575,7 +575,7 @@ public class EditApplicationsActivity extends Activity
 				{
 					Lw.d("saveSettingsOnClickListener.onClick()");
 					
-					if (((ToggleButton)btn).isChecked() )
+					if (((CheckBox)btn).isChecked() )
 					{
 						// must show
 						pkgSettings.addPackage(
@@ -633,6 +633,6 @@ public class EditApplicationsActivity extends Activity
 		TextView textViewAppName;
 		ImageView imageViewAppIcon;
 		
-		ToggleButton btnShowHide;
+		CheckBox btnShowHide;
 	}
 }

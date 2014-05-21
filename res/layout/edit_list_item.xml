@@ -6,19 +6,18 @@
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:padding="6dip" >
     
-    
-    <ToggleButton
-        android:id="@+id/toggleButtonShowApp"
+    <CheckBox
+        android:id="@+id/checkBoxShowApp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentTop="false"
         android:layout_alignWithParentIfMissing="true"
+        android:layout_centerVertical="true"
         android:text=""
         android:textSize="18sp" >
-    </ToggleButton>
-    
-    
+
+    </CheckBox>
     
     <ImageView
         android:id="@+id/editIcon"
@@ -26,9 +25,10 @@
         android:layout_height="48dip"
         android:layout_alignParentBottom="true"
         android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/toggleButtonShowApp"
-        android:layout_marginRight="6dip"
-        android:contentDescription="TODO"
+        android:layout_marginRight="8dp"
+        android:layout_marginLeft="6dp"
+        android:layout_toRightOf="@+id/checkBoxShowApp"
+        android:contentDescription="App Icon"
         android:src="@drawable/ic_launcher" />
     
     <!-- CheckBox>
@@ -47,7 +47,7 @@
         android:id="@+id/textViewAppName"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@id/toggleButtonShowApp"
+        android:layout_alignBaseline="@id/checkBoxShowApp"
         android:layout_alignWithParentIfMissing="true"
         android:layout_toRightOf="@id/editIcon"
         android:layout_alignParentRight="true"
