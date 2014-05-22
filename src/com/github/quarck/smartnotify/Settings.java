@@ -13,11 +13,11 @@ public class Settings
 	private static final String IS_ENABLED_KEY = "pref_key_is_enabled";
 	private static final String VIBRATION_PATTERN_KEY = "pref_key_vibration_pattern";
 
-	private static final String SILENCE_FROM_KEY = "pref_key_silence_from"; // number of
+	private static final String SILENCE_FROM_KEY = "pref_key_time_silence_from"; // number of
 																	// minutes
 																	// since
 																	// 00:00:00
-	private static final String SILENCE_TO_KEY = "pref_key_silence_to";
+	private static final String SILENCE_TO_KEY = "pref_key_time_silence_to";
 	
 	private static final String ENABLE_SILENCE_HOURS_KEY = "pref_key_enable_silence_hours";
 
@@ -45,12 +45,16 @@ public class Settings
 	public void setSilencePeriod(int from, int to)
 	{
 		SharedPreferences.Editor editor = prefs.edit();
+	
+		editor.putInt(SILENCE_FROM_KEY, from);
+		editor.putInt(SILENCE_TO_KEY, to);
 		
-		editor.putString(SILENCE_FROM_KEY, String.format("%1$02:%2$02", from / 60, from % 60));
-		editor.putString(SILENCE_TO_KEY, String.format("%1$02:%2$02", to / 60, to % 60));
+//		editor.putString(SILENCE_FROM_KEY, String.format("%1$02:%2$02", from / 60, from % 60));
+//		editor.putString(SILENCE_TO_KEY, String.format("%1$02:%2$02", to / 60, to % 60));
 		editor.commit();
 	}
 
+	/*
 	private int getPrefTime(String key, int defaultValue)
 	{
 		int ret = defaultValue;
@@ -74,16 +78,16 @@ public class Settings
 		}
 		
 		return ret;
-	}
+	}*/
 	
 	public int getSilenceFrom()
 	{
-		return getPrefTime(SILENCE_FROM_KEY, 21 * 60 + 0); // 21:00
+		return prefs.getInt(SILENCE_FROM_KEY, 21 * 60 + 0); // 21:00
 	}
 
 	public int getSilenceTo()
 	{
-		return getPrefTime(SILENCE_TO_KEY, 5 * 60 + 30); // 5:30
+		return prefs.getInt(SILENCE_TO_KEY, 5 * 60 + 30); // 5:30
 	}
 
 	public boolean hasSilencePeriod()

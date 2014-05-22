@@ -19,19 +19,19 @@
 	        android:defaultValue="@string/pref_syncConnectionTypes_default" / -->
 	    
 
-        <EditTextPreference 
-            android:key="pref_key_silence_from"
+        <com.github.quarck.smartnotify.prefs.TimePickerPreference 
+            android:key="pref_key_time_silence_from"
             android:dependency="pref_key_enable_silence_hours"
             android:summary=""
             android:title="Silence from"
-            android:defaultValue="21:00"  />
+            android:defaultValue="1260"  />
         
-        <EditTextPreference 
-            android:key="pref_key_silence_to"
+        <com.github.quarck.smartnotify.prefs.TimePickerPreference 
+            android:key="pref_key_time_silence_to"
             android:dependency="pref_key_enable_silence_hours"
             android:summary=""
             android:title="Silence to"
-            android:defaultValue="05:30"  />
+            android:defaultValue="330"  />
         
     </PreferenceCategory>
 
@@ -40,15 +40,17 @@
         android:key="pref_key_notification">
         
 
-        <EditTextPreference android:key="pref_key_vibration_pattern"
+        <EditTextPreference
+            android:key="pref_key_vibration_pattern"
             android:summary=""
             android:title="Vibration pattern"
             android:defaultValue="0,80,30,80,30,80,30,80,30,80,30,80,30,80,150,900"  />
         
-        <RingtonePreference android:key="pref_key_ringtone"
+        <RingtonePreference 
+            android:key="pref_key_ringtone"
             android:summary=""
             android:title="Notification tone"/>
-        
+                
     </PreferenceCategory>
     
     
