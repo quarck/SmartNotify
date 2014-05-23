@@ -48,8 +48,9 @@
         
         <RingtonePreference 
             android:key="pref_key_ringtone"
-            android:summary=""
-            android:title="Notification tone"/>
+            android:summary=""            
+            android:title="Notification tone"
+            android:ringtoneType="notification" />
                 
     </PreferenceCategory>
     

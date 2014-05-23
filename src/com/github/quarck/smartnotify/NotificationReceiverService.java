@@ -309,31 +309,16 @@ public class NotificationReceiverService extends NotificationListenerService imp
 				restartTimer = true;
 			}
 
-			long silenceUntilTime = SilentPeriodManager.getSilentUntil(settings);
-			if (silenceUntilTime <= 0)
+			if (!restartTimer)
 			{
-				if (!restartTimer)
-				{
-					Lw.d(TAG, "Re-Ensuring alarm with interval " + minReminderInterval + " seconds to run at " + nextAlarm);
-					alarm.setAlarmMillis(this, nextAlarm, minReminderInterval * 1000);
-				}
-				else
-				{
-					Lw.d(TAG, "(Re)Setting alarm with interval " + minReminderInterval + " seconds");
-					alarm.setAlarmMillis(this, minReminderInterval * 1000);	
-				}
-				
+				Lw.d(TAG, "Re-Ensuring alarm with interval " + minReminderInterval + " seconds to run at " + nextAlarm);
+				alarm.setAlarmMillis(this, nextAlarm, minReminderInterval * 1000);
 			}
 			else
 			{
-				long nowPlus30mins = System.currentTimeMillis() + 30*60*1000;
-				
-				long sleepUntil = Math.min(nowPlus30mins, silenceUntilTime);
-								
-				// don't fire alarms if we are sleeping -- set alarm to the end of silent mode
-				Lw.d(TAG, "we are on silent until " + silenceUntilTime + ", setting alarm to fire at " + sleepUntil);
-				alarm.setAlarmMillis(this, sleepUntil, minReminderInterval * 1000);
-			}
+				Lw.d(TAG, "(Re)Setting alarm with interval " + minReminderInterval + " seconds");
+				alarm.setAlarmMillis(this, minReminderInterval * 1000);	
+			}				
 		}
 		else
 		{

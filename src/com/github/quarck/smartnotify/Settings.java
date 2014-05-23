@@ -149,7 +149,7 @@ public class Settings
 		if (pattern != null)
 			return pattern;
 		
-		return getDefaultVibrationPattern(); // failback
+		return getDefaultVibrationPattern(); // fail back
 	}
 	
 	public Uri getRingtoneURI()
@@ -169,13 +169,7 @@ public class Settings
 		finally
 		{
 			if (notification == null)
-				notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-		    
-		    if (notification == null)
-		    	notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-		    
-		    if (notification == null)
-		    	notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);			
+				notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);		    
 		}
 
 		return notification;
