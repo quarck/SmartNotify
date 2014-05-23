@@ -8,6 +8,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Vibrator;
 
 public class Alarm extends BroadcastReceiver
@@ -118,7 +121,19 @@ public class Alarm extends BroadcastReceiver
 
 		if (mayFireSound)
 		{
-			Lw.d(TAG, "Sound notifications are not implemented yet");
+			Lw.d(TAG, "Playing sound notification, if URI is not null");
+			
+			try
+			{
+				Uri notification = settings.getRingtoneURI();
+				if (notification != null)
+					RingtoneManager.getRingtone(ctx, notification).play();
+			}
+			catch (Exception e)
+			{
+				Lw.e(TAG, "Exception while playing notification");
+				e.printStackTrace();
+			}
 		}
 	}
 

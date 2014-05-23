@@ -2,6 +2,8 @@ package com.github.quarck.smartnotify;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 
 public class Settings
@@ -10,6 +12,7 @@ public class Settings
 
 	private static final String IS_ENABLED_KEY = "pref_key_is_enabled";
 	private static final String VIBRATION_PATTERN_KEY = "pref_key_vibration_pattern";
+	private static final String RINGTONE_KEY = "pref_key_ringtone";
 
 	// number of minutes since 00:00:00 
 	private static final String SILENCE_FROM_KEY = "pref_key_time_silence_from"; 
@@ -147,5 +150,34 @@ public class Settings
 			return pattern;
 		
 		return getDefaultVibrationPattern(); // failback
+	}
+	
+	public Uri getRingtoneURI()
+	{
+		Uri notification = null;
+		try
+		{
+			String uriValue = prefs.getString(RINGTONE_KEY, "");
+
+			if (uriValue != null && !uriValue.isEmpty())
+				notification = Uri.parse(uriValue);			
+		} 
+		catch (Exception e) 
+		{
+		    e.printStackTrace();
+		}
+		finally
+		{
+			if (notification == null)
+				notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+		    
+		    if (notification == null)
+		    	notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+		    
+		    if (notification == null)
+		    	notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);			
+		}
+
+		return notification;
 	}
 }
