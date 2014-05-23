@@ -22,7 +22,7 @@
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <EditText
-        android:id="@+id/editText1"
+        android:id="@+id/editTextVibrationPattern"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/textViewSilenceFrom"
@@ -58,7 +58,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/button1"
         android:layout_marginTop="28dp"
-        android:layout_toLeftOf="@+id/editText1"
+        android:layout_toLeftOf="@+id/editTextVibrationPattern"
         android:text="To:"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
@@ -68,7 +68,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/textViewSilenceTo"
         android:layout_alignBottom="@+id/textViewSilenceTo"
-        android:layout_alignLeft="@+id/editText1"
+        android:layout_alignLeft="@+id/editTextVibrationPattern"
         android:layout_toLeftOf="@+id/Button01"
         android:ems="10"
         android:inputType="time" >
@@ -83,7 +83,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/EditText01"
         android:layout_alignBottom="@+id/EditText01"
-        android:layout_toRightOf="@+id/editText1"
+        android:layout_toRightOf="@+id/editTextVibrationPattern"
         android:text="Pick" />
 
     <TextView

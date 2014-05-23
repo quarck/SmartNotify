@@ -175,7 +175,7 @@ public class EditApplicationsActivity extends Activity
 			List<ApplicationInfo> applications = packageManager.getInstalledApplications(0/*PackageManager.GET_META_DATA*/);
 			
 			for(String recent : recentApplications)
-				recentAppsHash.put(recent, new Integer(1)); // LINQ, I miss you!
+				recentAppsHash.put(recent, Integer.valueOf(1)); // LINQ, I miss you!
 			
 			for (ApplicationInfo app : applications)
 			{
@@ -488,7 +488,6 @@ public class EditApplicationsActivity extends Activity
 					"RECENT NOTIFICATIONS", 
 					"OTHER APPLICATIONS"
 				};
-			Object ret = null;
 
 			int titleIdx = 0;
 			for (ArrayList<AppSelectionInfo> list : applications.getAll())

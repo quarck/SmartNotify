@@ -2,7 +2,6 @@ package com.github.quarck.smartnotify;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import android.content.Intent;
 import android.os.Handler;
