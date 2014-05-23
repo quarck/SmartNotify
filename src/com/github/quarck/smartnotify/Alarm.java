@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -39,24 +41,11 @@ public class Alarm extends BroadcastReceiver
 
 			boolean fireReminder = true;
 
-			if (settings.isSilencePeriodEnabled() && settings.hasSilencePeriod())
+			if (SilentPeriodManager.isEnabled(settings))
 			{
-				Calendar cal = Calendar.getInstance();
-				int hour = cal.get(Calendar.HOUR_OF_DAY);
-				int minute = cal.get(Calendar.MINUTE);
-				int currentTm = hour * 60 + minute;
-
-				int silenceFrom = settings.getSilenceFrom();
-				int silenceTo = settings.getSilenceTo();
-
-				Lw.d(TAG, "have silent period from " + silenceFrom + " to " + silenceTo);
-				Lw.d(TAG, "Current time is " + currentTm);
-
-				if (silenceTo < silenceFrom)
-					silenceTo += 24 * 60;
-
-				if ( inRange(currentTm, silenceFrom, silenceTo)
-					|| inRange(currentTm+24*60, silenceFrom, silenceTo))
+				long tmUntilEnd = SilentPeriodManager.getSilentUntil(settings);
+				
+				if (tmUntilEnd != 0)
 				{
 					Lw.d(TAG, "Service is enabled, but we are in silent zone, not alarming!");
 					fireReminder = false;
@@ -125,9 +114,23 @@ public class Alarm extends BroadcastReceiver
 			
 			try
 			{
-				Uri notification = settings.getRingtoneURI();
-				if (notification != null)
-					RingtoneManager.getRingtone(ctx, notification).play();
+				Uri notificationUri = settings.getRingtoneURI();
+
+				MediaPlayer mediaPlayer = new MediaPlayer();
+
+				mediaPlayer.setDataSource(ctx, notificationUri);
+				mediaPlayer.setAudioStreamType(AudioManager.STREAM_NOTIFICATION);
+				mediaPlayer.prepare();
+				mediaPlayer.setOnCompletionListener(
+					new OnCompletionListener() 
+					{
+						@Override
+						public void onCompletion(MediaPlayer mp)
+						{
+							mp.release();
+						}
+					});
+				mediaPlayer.start();
 			}
 			catch (Exception e)
 			{
@@ -175,8 +178,4 @@ public class Alarm extends BroadcastReceiver
 		return (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 	}
 	
-	private static boolean inRange(int value, int low, int high)
-	{
-		return (low <= value && value <= high);
-	}
 }
