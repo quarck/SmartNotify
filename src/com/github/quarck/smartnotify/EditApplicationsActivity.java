@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -40,13 +39,15 @@ public class EditApplicationsActivity extends Activity
 	{
 		private ArrayList<AppSelectionInfo> handledApps;
 		private ArrayList<AppSelectionInfo> recentApps;
+		private ArrayList<AppSelectionInfo> commonApps;
 		private ArrayList<AppSelectionInfo> visibleApps;
 		
 		private ArrayList<ArrayList<AppSelectionInfo>> all;
-		
+				
 		public Applications(
 				ArrayList<AppSelectionInfo> handled, 
-				ArrayList<AppSelectionInfo> recent, 
+				ArrayList<AppSelectionInfo> recent,
+				ArrayList<AppSelectionInfo> common,
 				ArrayList<AppSelectionInfo> visible
 			)
 		{
@@ -54,28 +55,21 @@ public class EditApplicationsActivity extends Activity
 			
 			handledApps = handled;
 			recentApps = recent;
+			commonApps = common;
 			visibleApps = visible;
 			
 			all.add(handledApps);
 			all.add(recentApps);
+			all.add(commonApps);
 			all.add(visibleApps);
 		}
-		
+				
 		public void setRecent(ArrayList<AppSelectionInfo> recent)
 		{
 			recentApps = recent;
 			all.set(1, recentApps);
 		}
 		
-		@SuppressWarnings("unused")
-		public ArrayList<AppSelectionInfo> getHandledApps() { return handledApps; }
-		
-		@SuppressWarnings("unused")
-		public ArrayList<AppSelectionInfo> getRecentApps() { return recentApps; }
-
-		@SuppressWarnings("unused")
-		public ArrayList<AppSelectionInfo> getVisibleApps() { return visibleApps; }
-
 		public ArrayList<ArrayList<AppSelectionInfo>> getAll() { return all; }
 		
 		public ArrayList<AppSelectionInfo> getAllFlat()
@@ -96,7 +90,6 @@ public class EditApplicationsActivity extends Activity
 	{		
 		boolean loadComplete = false;
 	
-		boolean isSelected;
 		String name;
 		String packageName;
 		Drawable icon;
@@ -147,6 +140,8 @@ public class EditApplicationsActivity extends Activity
 
 	private void loadApplications()
 	{
+		CommonAppsRegistry.initRegistry(this);
+		
 		boolean onlyRefreshRecent = false;
 		synchronized (EditApplicationsActivity.class)
 		{
@@ -162,83 +157,115 @@ public class EditApplicationsActivity extends Activity
 
 		ArrayList<AppSelectionInfo> handledApps = new ArrayList<AppSelectionInfo>();
 		ArrayList<AppSelectionInfo> recentApps = new ArrayList<AppSelectionInfo>();
+		ArrayList<AppSelectionInfo> commonApps = new ArrayList<AppSelectionInfo>();
 		ArrayList<AppSelectionInfo> visibleApps = new ArrayList<AppSelectionInfo>();
 		
-		String[] recentApplications = NotificationReceiverService.getRecentNotifications();
+		
+		HashMap<String,Integer> alreadyLoadedAppsHash = new HashMap<String, Integer>();
 
 		Lw.d(TAG, "Loading applications");
 	
-		if (!onlyRefreshRecent)
-		{	
-			HashMap<String,Integer> recentAppsHash = new HashMap<String, Integer>();
+		Lw.d(TAG, "Loading configured applications first");
+				
+		for (PackageSettings.Package pkg : pkgSettings.getAllPackages())
+		{
+			if (alreadyLoadedAppsHash.containsKey(pkg.getPackageName()))
+				continue; // already loaded by somebody else (by whooom??)
+
+			try
+			{
+				AppSelectionInfo asi = new AppSelectionInfo();
+				
+				asi.packageName = pkg.getPackageName();	
+				asi.app = packageManager.getApplicationInfo(pkg.getPackageName(), 0/*PackageManager.GET_META_DATA*/);				
+				asi.name = packageManager.getApplicationLabel(asi.app).toString();
+				handledApps.add(asi);
+				alreadyLoadedAppsHash.put(asi.packageName, 1);
+			}
+			catch (NameNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	
-			List<ApplicationInfo> applications = packageManager.getInstalledApplications(0/*PackageManager.GET_META_DATA*/);
+		}
+
+		Lw.d(TAG, "Loading Recent applications below:");
+
+		for (String recent : NotificationReceiverService.getRecentNotifications())
+		{
+			Lw.d(TAG, "Recent app: " + recent);
+
+			if (alreadyLoadedAppsHash.containsKey(recent))
+				continue; // already loaded by somebody else
 			
-			for(String recent : recentApplications)
-				recentAppsHash.put(recent, Integer.valueOf(1)); // LINQ, I miss you!
+			AppSelectionInfo asi = new AppSelectionInfo();
 			
-			for (ApplicationInfo app : applications)
+			asi.packageName = recent;				
+
+			try
+			{
+				ApplicationInfo app = packageManager.getApplicationInfo(recent, 0/*PackageManager.GET_META_DATA*/);
+				 
+				asi.name = packageManager.getApplicationLabel(app).toString();
+				asi.app = app;					
+				recentApps.add(asi);
+				alreadyLoadedAppsHash.put(asi.packageName, 1);
+			}
+			catch (NameNotFoundException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		Lw.d(TAG, "Loading COMMON applications below:");				
+		for (ApplicationInfo appInfo : CommonAppsRegistry.getApplications())
+		{
+			Lw.d(TAG, "Recent app: " + appInfo.packageName);
+
+			if (alreadyLoadedAppsHash.containsKey(appInfo.packageName))
+				continue; // already loaded by somebody else
+			
+			AppSelectionInfo asi = new AppSelectionInfo();
+			
+			asi.packageName = appInfo.packageName;
+
+			asi.name = packageManager.getApplicationLabel(appInfo).toString();
+			asi.app = appInfo;					
+			commonApps.add(asi);
+			alreadyLoadedAppsHash.put(asi.packageName, 1);
+		}
+
+				
+		if (!onlyRefreshRecent)
+		{
+			Lw.d(TAG, "Loading all other applications");
+		
+			for (ApplicationInfo app : packageManager.getInstalledApplications(0))
 			{
 				AppSelectionInfo asi = new AppSelectionInfo();
 				
 				if (app.packageName == null)
 					continue;
-				
+		
+				if (alreadyLoadedAppsHash.containsKey(app.packageName))
+					continue; // already loaded by somebody else
+
 				asi.packageName = app.packageName;	
-				
-				
-				asi.isSelected = pkgSettings.getIsListed( app.packageName );
-	
-				if (!asi.isSelected && recentAppsHash.containsKey(asi.packageName))
-					continue; // skip, would be loaded separately
-				
+								
+				alreadyLoadedAppsHash.put(asi.packageName, 1);
+								
 				asi.name = packageManager.getApplicationLabel(app).toString();
 				asi.app = app;
 				
 				Intent launchActivity = packageManager.getLaunchIntentForPackage(app.packageName);
 				
-				if (asi.isSelected)
-				{
-					handledApps.add(asi);
-				}
-				else if (launchActivity != null)
+				if (launchActivity != null)
 				{
 					visibleApps.add(asi);
-				}
-				else
-				{
-					//otherApps.add(asi);
-				}	
+				}	 
 			}
-		}
-		
-		Lw.d(TAG, "Recent applications below:");
-		
-		for (String recent : recentApplications)
-		{
-			Lw.d(TAG, "Recent app: " + recent);
-			
-			AppSelectionInfo asi = new AppSelectionInfo();
-			
-			asi.packageName = recent;	
-			
-			asi.isSelected = pkgSettings.getIsListed( recent );
-			
-			if (!asi.isSelected)
-				try
-				{
-					ApplicationInfo app = packageManager.getApplicationInfo(recent, 0/*PackageManager.GET_META_DATA*/);
-					
-					asi.name = packageManager.getApplicationLabel(app).toString();
-					asi.app = app;					
-					recentApps.add(asi);
-					
-				}
-				catch (NameNotFoundException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 		}
 		
 		Comparator<AppSelectionInfo> comparator = new Comparator<AppSelectionInfo>() 
@@ -253,12 +280,13 @@ public class EditApplicationsActivity extends Activity
 	    if (!onlyRefreshRecent)
 	    {
 			Collections.sort(handledApps, comparator);
+			Collections.sort(commonApps, comparator);
 			Collections.sort(recentApps, comparator);
 			Collections.sort(visibleApps, comparator);
 			
 			synchronized (EditApplicationsActivity.class)
 			{
-				listApps = new Applications(handledApps, recentApps, visibleApps);
+				listApps = new Applications(handledApps, recentApps, commonApps, visibleApps);
 			}
 	    }
 	    else
@@ -486,6 +514,7 @@ public class EditApplicationsActivity extends Activity
 			String[] titles = {
 					"HANDLED APPLICATIONS", 
 					"RECENT NOTIFICATIONS", 
+					"COMMON NOTIFICATIONS",
 					"OTHER APPLICATIONS"
 				};
 
