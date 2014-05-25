@@ -42,6 +42,8 @@ public class Alarm extends BroadcastReceiver
 {
 	public static final String TAG = "Alarm";
 
+	public static long lastFireTime = 0;
+	
 	public Alarm()
 	{
 		super();
@@ -89,6 +91,11 @@ public class Alarm extends BroadcastReceiver
 				fireReminder = false;
 			}
 
+			if (fireReminder && (System.currentTimeMillis() - lastFireTime  < 60*1000) ) // do not fire more often than once a minute
+			{
+				fireReminder = false;
+			}
+			
 			if (fireReminder)
 			{
 				checkPhoneSilentAndFire(context, settings);
@@ -107,7 +114,7 @@ public class Alarm extends BroadcastReceiver
 		boolean mayFireSound = false;
 		
 		AudioManager am = (AudioManager)ctx.getSystemService(Context.AUDIO_SERVICE);
-
+		
 		switch (am.getRingerMode()) 
 		{
 		    case AudioManager.RINGER_MODE_SILENT:
@@ -125,6 +132,8 @@ public class Alarm extends BroadcastReceiver
 		
 		if (mayFireVibration)
 		{
+			lastFireTime = System.currentTimeMillis(); 
+					
 			Lw.d(TAG, "Firing vibro-alarm finally");
 			Vibrator v = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
 			long[] pattern = settings.getVibrationPattern();

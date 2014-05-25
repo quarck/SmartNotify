@@ -321,7 +321,7 @@ public class NotificationReceiverService extends NotificationListenerService imp
 
 		if (cntHandledNotifications != 0)
 		{
-			boolean restartTimer = false;
+			/*boolean restartTimer = false;
 			long nextAlarm = GlobalState.getNextAlarmTime(this);
 			
 			if (addedOrRemoved == null 
@@ -334,18 +334,10 @@ public class NotificationReceiverService extends NotificationListenerService imp
 			{
 				Lw.d(TAG, "Previous deadline has expired, re-starting timer");
 				restartTimer = true;
-			}
+			}*/
 
-			if (!restartTimer)
-			{
-				Lw.d(TAG, "Re-Ensuring alarm with interval " + minReminderInterval + " seconds to run at " + nextAlarm);
-				alarm.setAlarmMillis(this, nextAlarm, minReminderInterval * 1000);
-			}
-			else
-			{
-				Lw.d(TAG, "(Re)Setting alarm with interval " + minReminderInterval + " seconds");
-				alarm.setAlarmMillis(this, minReminderInterval * 1000);	
-			}				
+			Lw.d(TAG, "Setting alarm with interval " + minReminderInterval + " seconds");
+			alarm.setAlarmMillis(this, System.currentTimeMillis() + 60*1000, minReminderInterval * 1000);	
 		}
 		else
 		{
