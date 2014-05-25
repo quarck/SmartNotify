@@ -15,7 +15,7 @@
 	    android:layout_alignBaseline="@+id/toggleButtonEnableService"
 	    android:layout_alignBottom="@+id/toggleButtonEnableService"
 	    android:layout_alignParentLeft="true"
-	    android:text="Notification Service:"
+	    android:text="@string/notification_service"
 	    android:textAppearance="?android:attr/textAppearanceLarge" />
     
     <ToggleButton
@@ -35,7 +35,7 @@
 	    android:layout_height="wrap_content"
 	    android:layout_alignLeft="@+id/listApplications"
         android:layout_below="@+id/textViewLblEnableSvcd"
-	    android:text="Select below applications to handle:"
+	    android:text="@string/select_apps"
 	    android:textAppearance="?android:attr/textAppearanceSmall" />
     	
 	<ListView
@@ -45,5 +45,16 @@
 	    android:layout_alignParentLeft="true"
 	    android:layout_alignParentRight="true"
 	    android:layout_below="@+id/textViewLblEnablePerAppSmallprint" />
+	
+	<TextView
+	    android:id="@+id/textViewLonelyHere"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentLeft="true"
+	    android:layout_alignParentRight="true"
+	    android:layout_centerVertical="true"
+	    android:text="@string/no_apps"
+	    android:textAppearance="?android:attr/textAppearanceMedium"
+	    android:visibility="visible" />
 	
 </RelativeLayout>

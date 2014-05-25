@@ -48,15 +48,29 @@ public class Settings
 	
 	private static final String ENABLE_SILENCE_HOURS_KEY = "pref_key_enable_silence_hours";
 
+	private static final String INITIAL_POPULATED_KEY = "initial_populated";
+	
 	private SharedPreferences prefs = null;
 
 	public Settings(Context ctx)
 	{
 		context = ctx;
-		//prefs = context.getSharedPreferences(SHARED_PREF, Context.MODE_PRIVATE);
 		prefs = PreferenceManager.getDefaultSharedPreferences(context);
 	}
 
+	public void setInitialPopulated(boolean value)
+	{
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(INITIAL_POPULATED_KEY, value);
+		editor.commit();
+	}
+
+	public boolean isInitialPopulated()
+	{
+		return prefs.getBoolean(INITIAL_POPULATED_KEY, false);
+	}
+	
+	
 	public void setServiceEnabled(boolean value)
 	{
 		SharedPreferences.Editor editor = prefs.edit();

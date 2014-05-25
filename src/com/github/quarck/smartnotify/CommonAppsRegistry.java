@@ -38,13 +38,15 @@ public class CommonAppsRegistry
 		"com.google.android.talk",
 		"com.google.android.apps.plus",
 		"com.android.phone",
-		"com.skype.raider",
+		"com.android.mms",
+		"com.android.calendar",
 		"com.google.android.email",
 		"com.google.android.gm",
 		"com.facebook.katana",
 		"com.facebook.orca",
 		"com.viber.voip",
 		"com.whatsapp",
+		"com.skype.raider",
 		"com.vkontakte.android",
 		"com.csipsimple",
 		"unibilling.sipfone",
@@ -66,7 +68,6 @@ public class CommonAppsRegistry
 	private static boolean[] presenseMap = null;
 
 	private static ApplicationInfo[] applicationInfos = null;
-	
 	
 	public static void initRegistry(Context ctx)
 	{

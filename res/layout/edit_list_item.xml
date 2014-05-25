@@ -52,7 +52,7 @@
         android:layout_toRightOf="@id/editIcon"
         android:layout_alignParentRight="true"
         android:gravity="center_vertical"
-        android:text="Example application"
+        android:text=""
         android:textSize="16sp" />
     
 </RelativeLayout>

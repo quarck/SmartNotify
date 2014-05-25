@@ -255,6 +255,26 @@ public class PackageSettings extends SQLiteOpenHelper
 		return packages;
 	}
 
+	public boolean isEmpty()
+	{
+		boolean ret = true;
+
+		String query = "SELECT COUNT(" + KEY_PACKAGE + ") FROM " + TABLE_NAME;
+
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(query, null);
+
+		if (cursor.moveToFirst())
+		{
+			int count = Integer.parseInt(cursor.getString(0));
+			ret = (count == 0);
+
+			cursor.close();
+		}
+
+		return ret;
+	}
+	
 	public int updatePackage(Package pkg)
 	{
 		return updatePackage(TABLE_NAME, pkg);

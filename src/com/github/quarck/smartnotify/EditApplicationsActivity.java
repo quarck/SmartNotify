@@ -125,7 +125,7 @@ public class EditApplicationsActivity extends Activity
 		ApplicationInfo app;
 	}
 	
-	private LoadApplicationsTask appLoader = null;
+	private LoadApplications1stStageTask app1stLoader = null;
 	private LoadApplications2ndStageTask app2ndLoader = null;
 	
 
@@ -328,7 +328,7 @@ public class EditApplicationsActivity extends Activity
 	    }
 	}
 	
-	public class LoadApplicationsTask extends AsyncTask<Void, Void, Void>
+	public class LoadApplications1stStageTask extends AsyncTask<Void, Void, Void>
 	{
 		@Override
 		protected Void doInBackground(Void... params)
@@ -361,7 +361,7 @@ public class EditApplicationsActivity extends Activity
 			
 			synchronized (EditApplicationsActivity.this)
 			{
-				appLoader = null; // job is done, dispose 
+				app1stLoader = null; // job is done, dispose 
 				app2ndLoader = new LoadApplications2ndStageTask();
 				app2ndLoader.execute();
 			}
@@ -440,18 +440,18 @@ public class EditApplicationsActivity extends Activity
 	@Override 
 	public void onPause()
 	{
-		LoadApplicationsTask loader;
+		LoadApplications1stStageTask loader1st;
 		LoadApplications2ndStageTask loader2nd;
 		
 		synchronized(this)
 		{
-			loader = appLoader;
-			appLoader = null;
+			loader1st = app1stLoader;
+			app1stLoader = null;
 			loader2nd = app2ndLoader;
 		}
 		
-		if (loader != null)
-			loader.cancel(false);
+		if (loader1st != null)
+			loader1st.cancel(false);
 		
 		if (loader2nd != null)
 			loader2nd.cancel(false);
@@ -466,8 +466,8 @@ public class EditApplicationsActivity extends Activity
 		
 		synchronized(this)
 		{
-			appLoader = new LoadApplicationsTask();
-			appLoader.execute();
+			app1stLoader = new LoadApplications1stStageTask();
+			app1stLoader.execute();
 		}
 	}
 
@@ -475,7 +475,6 @@ public class EditApplicationsActivity extends Activity
 	{
 		private final Context context;
 
-		//ArrayList<AppSelectionInfo> listApplications;
 		Applications applications;
 
 		PackageManager packageManager = getPackageManager();
@@ -486,7 +485,6 @@ public class EditApplicationsActivity extends Activity
 			
 			context = ctx;
 			
-//			listApplications = applications;
 			applications = apps;
 			
 			Lw.d(TAG, "Adding list of applications:");
@@ -586,7 +584,6 @@ public class EditApplicationsActivity extends Activity
 				viewHolder.btnShowHide = (CheckBox) rowView.findViewById(R.id.checkBoxShowApp);				
 				viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
 				viewHolder.imageViewAppIcon = (ImageView) rowView.findViewById(R.id.editIcon);
-				//viewHolder.checkBoxEnableForApp = (CheckBox) rowView.findViewById(R.id.checkBoxEnableForApp);				
 
 				rowView.setTag(viewHolder);
 			}
@@ -617,7 +614,6 @@ public class EditApplicationsActivity extends Activity
 			if ( appInfo.icon != null)
 				try
 				{
-			//		appInfo.icon.setBounds(0, 0, 12, 12);
 					viewHolder.imageViewAppIcon.setImageDrawable( appInfo.icon );
 				}
 				catch (Exception ex)
@@ -633,21 +629,13 @@ public class EditApplicationsActivity extends Activity
 					
 					if (((CheckBox)btn).isChecked() )
 					{
-						// must show
-						
 						pkgSettings.lookupEverywhereAndMoveOrInsertNew(appInfo.packageName, true, 0);
-						
-//                       pkgSettings.addPackage(
-  //                         pkgSettings.new Package(
-    //                           appInfo.packageName, false, 0
-      //                     ));
 					}
 					else
 					{
 						// must hide
 						PackageSettings.Package pkg = pkgSettings.getPackage(appInfo.packageName);
 						if (pkg != null)
-		//					pkgSettings.deletePackage(pkg);
 							pkgSettings.hidePackage(pkg);
 					}
 					

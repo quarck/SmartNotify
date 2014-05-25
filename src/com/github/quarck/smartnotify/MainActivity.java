@@ -64,6 +64,8 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 	
 	private ServiceClient serviceClient = null;
 
+	private boolean serviceEnabled = false;
+	
 	private class ApplicationPkgInfo
 	{
 		PackageSettings.Package pkgInfo;
@@ -73,10 +75,12 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 	private ArrayList<ApplicationPkgInfo> handledApplications = null;
 	
-	private ToggleButton tbEnableService = null;
-
+	private ToggleButton toggleButtonEnableService = null;
 	private ListView listHandledApplications = null;
-
+	private TextView textViewlonelyHere = null;
+	private TextView textViewListSmallPrint = null;
+	
+	private ListApplicationsAdapter listAdapter = null;
 	
 	private OnClickListener saveSettingsOnClickListener = null;
 
@@ -94,16 +98,16 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		
 		Lw.d(TAG, "onCreateView");
 
-		setContentView(R.layout.activity_main);
-
-		tbEnableService = (ToggleButton) findViewById(R.id.toggleButtonEnableService);
-
-		listHandledApplications = (ListView) findViewById(R.id.listApplications);
-		
 		settings = new Settings(this);
 		pkgSettings = new PackageSettings(this);
 
-	
+		setContentView(R.layout.activity_main);
+
+		toggleButtonEnableService = (ToggleButton) findViewById(R.id.toggleButtonEnableService);
+		listHandledApplications = (ListView) findViewById(R.id.listApplications);
+		textViewlonelyHere = (TextView) findViewById(R.id.textViewLonelyHere);
+		textViewListSmallPrint = (TextView) findViewById(R.id.textViewLblEnablePerAppSmallprint);
+
 		listHandledApplications.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
 			@Override
@@ -113,9 +117,9 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			}
 		});
 		
-		tbEnableService.setChecked(settings.isServiceEnabled());
+		serviceEnabled = settings.isServiceEnabled();
+		toggleButtonEnableService.setChecked(serviceEnabled);
 
-		
 		synchronized(this)
 		{
 			listApplicationsLoader = new LoadPackagesTask();
@@ -130,13 +134,12 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 				saveSettings();
 
-				if (tbEnableService.isChecked())
+				if (serviceEnabled)
 					serviceClient.checkPermissions();
 			}
 		};
 
-		tbEnableService.setOnClickListener(saveSettingsOnClickListener);
-
+		toggleButtonEnableService.setOnClickListener(saveSettingsOnClickListener);
 	}
 
 	@Override
@@ -194,10 +197,16 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 	{
 		Lw.d(TAG, "Saving current settings");
 
-		settings.setServiceEnabled(tbEnableService.isChecked());
+		serviceEnabled = toggleButtonEnableService.isChecked();	
+		settings.setServiceEnabled(serviceEnabled);
 
 		if (serviceClient != null)
 			serviceClient.forceReloadConfig();
+		
+		synchronized(this)
+		{
+			listAdapter.notifyDataSetChanged();
+		}
 	}
 
 	public class LoadPackagesTask extends AsyncTask<Void, Void, Void>
@@ -208,6 +217,12 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			Lw.d(TAG, "LoadPackagesTask::doInBackground");
 			
 			PackageSettings pkgSettings = new PackageSettings(MainActivity.this);
+
+			if (!settings.isInitialPopulated())
+			{
+				new InitialPopulate().populate(MainActivity.this, pkgSettings);
+				settings.setInitialPopulated(true);
+			}
 			
 			PackageManager packageManager = getPackageManager();
 
@@ -264,19 +279,35 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 		protected void onPostExecute(Void result)
 		{
 			ArrayList<ApplicationPkgInfo> applications = null;
+
+			ListApplicationsAdapter adapter = null;
 			
 			synchronized (MainActivity.this)
 			{
 				applications = handledApplications;
 			}
 			
-			listHandledApplications.setAdapter(	new ListApplicationsAdapter(MainActivity.this, applications));
-
-			listHandledApplications.setSelection(0);
+			if (applications.isEmpty())
+			{
+				textViewlonelyHere.setVisibility(View.VISIBLE);
+				listHandledApplications.setVisibility(View.GONE);
+				textViewListSmallPrint.setVisibility(View.GONE);
+			}
+			else
+			{			
+				listHandledApplications.setVisibility(View.VISIBLE);
+				textViewlonelyHere.setVisibility(View.VISIBLE);			
+				textViewlonelyHere.setVisibility(View.GONE);	
+				
+				adapter = new ListApplicationsAdapter(MainActivity.this, applications);
+				listHandledApplications.setAdapter(	adapter);
+				listHandledApplications.setSelection(0);
+			}
 			
 			synchronized (MainActivity.this)
 			{
-				listApplicationsLoader = null; // job is done, dispose 
+				listApplicationsLoader = null; // job is done, dispose
+				listAdapter = adapter;
 			}
 		}
 
@@ -376,6 +407,12 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 		public void onItemClicked(int position)
 		{
+			if (!serviceEnabled)
+			{
+				Lw.d(TAG, "ListApplicationsAdapter::onItemClicked, service is disbaled");
+				return;
+			}
+			
 			Lw.d(TAG, "ListApplicationsAdapter::onItemClicked, pos=" + position);
 	
 			final ApplicationPkgInfo appInfo = listApplications.get(position); 
@@ -393,7 +430,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			final NumberPicker picker = (NumberPicker)dialogView.findViewById(R.id.numberPickerRemindInterval);
 
 			picker.setMinValue(1);
-			picker.setMaxValue(60);
+			picker.setMaxValue(120);
 			picker.setValue(appInfo.pkgInfo.getRemindIntervalSeconds() / 60);
 			
 			alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
@@ -453,7 +490,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			return 2;
 		}
 
-		
 		@Override
 		public int getItemViewType(int position)	
 		{
@@ -478,7 +514,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 				viewHolder.textViewRemindInterval = (TextView) rowView.findViewById(R.id.textViewIntervalLabel);				
 				viewHolder.textViewAppName = (TextView) rowView.findViewById(R.id.textViewAppName);				
 				viewHolder.imageViewAppIcon = (ImageView) rowView.findViewById(R.id.icon);
-				//viewHolder.checkBoxEnableForApp = (CheckBox) rowView.findViewById(R.id.checkBoxEnableForApp);				
 				viewHolder.btnEnableForApp = (ToggleButton) rowView.findViewById(R.id.toggleButtonEnableForApp);				
 				
 				rowView.setTag(viewHolder);
@@ -486,7 +521,6 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			
 			final ApplicationPkgInfo appInfo = listApplications.get(position); // this would not change as well - why lookup twice then?
 						
-			//viewHolder.checkBoxEnableForApp.setChecked( appInfo.pkgInfo.isHandlingThis());
 			viewHolder.btnEnableForApp.setChecked( appInfo.pkgInfo.isHandlingThis() );
 			viewHolder.textViewRemindInterval.setText("every " + (appInfo.pkgInfo.getRemindIntervalSeconds() / 60) + " mins (click to change)");
 			
@@ -498,20 +532,23 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			if ( appInfo.icon != null)
 				viewHolder.imageViewAppIcon.setImageDrawable( appInfo.icon );
 			
+			viewHolder.btnEnableForApp.setEnabled(serviceEnabled);
+			viewHolder.textViewRemindInterval.setEnabled(serviceEnabled);
+			viewHolder.imageViewAppIcon.setEnabled(serviceEnabled);
+			viewHolder.textViewAppName.setEnabled(serviceEnabled);
+
 			viewHolder.btnEnableForApp.setOnClickListener(new OnClickListener()
 			{
 				public void onClick(View btn)
 				{
 					Lw.d("saveSettingsOnClickListener.onClick()");
 
-					appInfo.pkgInfo.setHandlingThis( ((ToggleButton)btn).isChecked() );
-				
-					pkgSettings.updatePackage(appInfo.pkgInfo);
-					
+					appInfo.pkgInfo.setHandlingThis( ((ToggleButton)btn).isChecked() );					
+					pkgSettings.updatePackage(appInfo.pkgInfo);					
 					saveSettings();
 				}
 			});
-
+			
 			return rowView;
 		}	
 
