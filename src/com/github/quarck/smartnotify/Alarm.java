@@ -42,8 +42,6 @@ public class Alarm extends BroadcastReceiver
 {
 	public static final String TAG = "Alarm";
 
-	public static long lastFireTime = 0;
-	
 	public Alarm()
 	{
 		super();
@@ -60,10 +58,6 @@ public class Alarm extends BroadcastReceiver
 		{
 			Lw.d(TAG, "Serivce is enabled");
 			
-			GlobalState.setNextAlarmTime(context, 
-					System.currentTimeMillis() 
-						+ GlobalState.getCurrentRemindInterval(context));
-
 			boolean fireReminder = true;
 
 			if (SilentPeriodManager.isEnabled(settings))
@@ -91,14 +85,20 @@ public class Alarm extends BroadcastReceiver
 				fireReminder = false;
 			}
 
-			if (fireReminder && (System.currentTimeMillis() - lastFireTime  < 60*1000) ) // do not fire more often than once a minute
+			long currentTime = System.currentTimeMillis();
+			long lastFireTime = GlobalState.getLastFireTime(context);
+			
+			if (fireReminder && (currentTime - lastFireTime  < 60*1000) ) // do not fire more often than once a minute
 			{
 				fireReminder = false;
 			}
 			
 			if (fireReminder)
 			{
-				checkPhoneSilentAndFire(context, settings);
+				boolean fired = checkPhoneSilentAndFire(context, settings);
+				
+				if (fired)
+					GlobalState.setLastFireTime(context, lastFireTime);
 			}
 		}
 		else
@@ -108,10 +108,12 @@ public class Alarm extends BroadcastReceiver
 		}
 	}
 	
-	private void checkPhoneSilentAndFire(Context ctx, Settings settings)
+	private boolean checkPhoneSilentAndFire(Context ctx, Settings settings)
 	{
 		boolean mayFireVibration = false;
 		boolean mayFireSound = false;
+		
+		boolean fired = false;
 		
 		AudioManager am = (AudioManager)ctx.getSystemService(Context.AUDIO_SERVICE);
 		
@@ -132,9 +134,10 @@ public class Alarm extends BroadcastReceiver
 		
 		if (mayFireVibration)
 		{
-			lastFireTime = System.currentTimeMillis(); 
-					
 			Lw.d(TAG, "Firing vibro-alarm finally");
+
+			fired = true;
+			
 			Vibrator v = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
 			long[] pattern = settings.getVibrationPattern();
 			v.vibrate(pattern, -1);
@@ -143,6 +146,8 @@ public class Alarm extends BroadcastReceiver
 		if (mayFireSound)
 		{
 			Lw.d(TAG, "Playing sound notification, if URI is not null");
+		
+			fired = true;
 			
 			try
 			{
@@ -170,27 +175,36 @@ public class Alarm extends BroadcastReceiver
 				e.printStackTrace();
 			}
 		}
-	}
-
-	public void setAlarmMillis(Context context, long whenMillis, int repeatMillis)
-	{
-		cancelAlarm(context); // cancel previous alarm, if any, so we would not have two alarms
 		
-		Lw.d(TAG, "Setting alarm for " + whenMillis + ", repeat " + repeatMillis);
-		
-		GlobalState.setCurrentRemindInterval(context,  repeatMillis);
-		GlobalState.setNextAlarmTime(context, whenMillis);
-
-		Intent intent = new Intent(context, Alarm.class);
-		PendingIntent pendIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-		alarmManager(context).setRepeating(AlarmManager.RTC_WAKEUP, whenMillis, repeatMillis, pendIntent);
+		return fired;
 	}
 
 	public void setAlarmMillis(Context context, int repeatMillis)
 	{
-		Lw.d(TAG, "This (below) is a simple repeating alarm without specific deadline");
-		setAlarmMillis(context, System.currentTimeMillis() + repeatMillis, repeatMillis);
+		Lw.d(TAG, "Setting alarm with repeation interval " + repeatMillis + " milliseconds");
+		
+		if (GlobalState.getCurrentRemindInterval(context) != repeatMillis)
+		{
+			Lw.d(TAG, "Cancelling previous alarm since interval has changed or new alarm has been introduced");
+			Intent cancelIntent = new Intent(context, Alarm.class);
+			PendingIntent sender = PendingIntent.getBroadcast(context, 0, cancelIntent, 0);
+
+			alarmManager(context).cancel(sender);			
+
+			Lw.d(TAG, "Setting up new alarm with interval " + repeatMillis);
+
+			Intent intent = new Intent(context, Alarm.class);
+			PendingIntent pendIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+			alarmManager(context).setRepeating(AlarmManager.RTC_WAKEUP, 
+					System.currentTimeMillis() + repeatMillis, repeatMillis, pendIntent);
+
+			GlobalState.setCurrentRemindInterval(context,  repeatMillis);
+		}
+		else
+		{
+			Lw.d(TAG, "Alarm interval didn't change - NOT TOUCHING THE ALARM");
+		}	
 	}
 
 	public void cancelAlarm(Context context)
@@ -202,7 +216,7 @@ public class Alarm extends BroadcastReceiver
 		alarmManager(context).cancel(sender);
 
 		GlobalState.setCurrentRemindInterval(context,  0);
-		GlobalState.setNextAlarmTime(context, 0);
+//		GlobalState.setNextAlarmTime(context, 0);
 	}
 
 	private AlarmManager alarmManager(Context context)

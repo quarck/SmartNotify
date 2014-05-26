@@ -321,23 +321,8 @@ public class NotificationReceiverService extends NotificationListenerService imp
 
 		if (cntHandledNotifications != 0)
 		{
-			/*boolean restartTimer = false;
-			long nextAlarm = GlobalState.getNextAlarmTime(this);
-			
-			if (addedOrRemoved == null 
-					|| pkgSettings.isPackageHandled(addedOrRemoved.getPackageName()))
-			{
-				Lw.d(TAG, "Either explicit restart request or handled package notification added / removed - restarting timer");
-				restartTimer = true;
-			}
-			else if (System.currentTimeMillis() + 300 >= nextAlarm)
-			{
-				Lw.d(TAG, "Previous deadline has expired, re-starting timer");
-				restartTimer = true;
-			}*/
-
-			Lw.d(TAG, "Setting alarm with interval " + minReminderInterval + " seconds");
-			alarm.setAlarmMillis(this, System.currentTimeMillis() + 60*1000, minReminderInterval * 1000);	
+			Lw.d(TAG, "(Re)Setting alarm with interval " + minReminderInterval + " seconds");
+			alarm.setAlarmMillis(this,  minReminderInterval * 1000);	
 		}
 		else
 		{
