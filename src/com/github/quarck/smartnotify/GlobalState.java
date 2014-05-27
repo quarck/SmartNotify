@@ -61,7 +61,8 @@ public class GlobalState extends Application
 	{
 		return isOnCall;
 	}
-
+	
+	
 	public static void setIsOnCall(Context ctx, boolean val)
 	{
 		instance(ctx).isOnCall = val;
@@ -70,6 +71,31 @@ public class GlobalState extends Application
 	public static boolean getIsOnCall(Context ctx)
 	{
 		return instance(ctx).isOnCall;
+	}
+
+	
+	private boolean isMuted = false;
+	
+	public static void setIsMuted(Context ctx, boolean val)
+	{
+		instance(ctx).isMuted = val;
+	}
+	
+	public static boolean getIsMuted(Context ctx)
+	{
+		return instance(ctx).isMuted;
+	}
+
+	private int lastCountHandledNotifications = -1;
+
+	public static int getLastCountHandledNotifications(Context ctx)
+	{
+		return instance(ctx).lastCountHandledNotifications;
+	}
+
+	public static void setLastCountHandledNotifications(Context ctx, int lastCountHandledNotifications)
+	{
+		instance(ctx).lastCountHandledNotifications = lastCountHandledNotifications;
 	}
 	
 	

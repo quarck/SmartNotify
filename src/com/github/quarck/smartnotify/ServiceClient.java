@@ -97,9 +97,6 @@ public class ServiceClient implements Handler.Callback
 			Lw.d(TAG, "Got connection to the service");
 			
 			mService = new Messenger(service);
-
-//			if (callback != null)
-//				callback.onConnected();
 		}
 
 		public void onServiceDisconnected(ComponentName className)
@@ -107,9 +104,6 @@ public class ServiceClient implements Handler.Callback
 			Lw.d(TAG, "Service disconnected");
 			
 			mService = null;
-
-//			if (callback != null)
-//				callback.onDisconnected();
 		}
 	};
 
@@ -181,5 +175,10 @@ public class ServiceClient implements Handler.Callback
 	public void forceReloadConfig()
 	{
 		sendServiceReq(NotificationReceiverService.MSG_RELOAD_SETTINGS);
+	}
+	
+	public void toggleMute()
+	{
+		sendServiceReq(NotificationReceiverService.MSG_TOGGLE_MUTE);
 	}
 }

@@ -30,6 +30,11 @@ package com.github.quarck.smartnotify;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -38,6 +43,8 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.widget.RemoteViews;
+import android.widget.RemoteViews.RemoteView;
 
 public class NotificationReceiverService extends NotificationListenerService implements Handler.Callback
 {
@@ -50,10 +57,11 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	public static final int MSG_LIST_NOTIFICATIONS = 3;
 	public static final int MSG_RELOAD_SETTINGS = 4;
 	public static final int MSG_LIST_RECENT_NOTIFICATIONS = 5;
-
+	public static final int MSG_TOGGLE_MUTE = 6;
+	
 	private Alarm alarm = null;
 
-	private final Messenger mMessenger = new Messenger(new Handler(this));
+	private final Messenger messenger = new Messenger(new Handler(this));
 
 	private Settings settings = null;
 
@@ -86,6 +94,12 @@ public class NotificationReceiverService extends NotificationListenerService imp
 		case MSG_LIST_RECENT_NOTIFICATIONS:
 			Lw.d(TAG, "Req for recent notifications");
 			sendRecent(msg);
+			break;
+			
+		case MSG_TOGGLE_MUTE:
+			Lw.d(TAG, "Toggling mute");			
+			GlobalState.setIsMuted(this, ! GlobalState.getIsMuted(this));
+			update(null);
 			break;
 		}
 
@@ -230,11 +244,11 @@ public class NotificationReceiverService extends NotificationListenerService imp
 	public IBinder onBind(Intent intent)
 	{
 		if (intent.getBooleanExtra(configServiceExtra, false))
-			return mMessenger.getBinder();
+			return messenger.getBinder();
 
 		return super.onBind(intent);
 	}
-
+	
 	private void update(StatusBarNotification addedOrRemoved)
 	{
 		Lw.d(TAG, "update");
@@ -257,6 +271,11 @@ public class NotificationReceiverService extends NotificationListenerService imp
 		{
 			Lw.d(TAG, "Service is disabled, cancelling all the alarms and returning");
 			alarm.cancelAlarm(this);
+			if ( GlobalState.getLastCountHandledNotifications(this) != 0 )
+			{
+				OngoingNotificationManager.cancelOngoingNotification(this);
+				GlobalState.setLastCountHandledNotifications(this, 0);
+			}
 			return;
 		}
 
@@ -284,6 +303,12 @@ public class NotificationReceiverService extends NotificationListenerService imp
 				Lw.d(TAG, "Checking notification" + notification);
 				String packageName = notification.getPackageName();
 
+				if (packageName == "com.github.quarck.smartnotify")
+				{
+					Lw.d(TAG, "That's ours, ignoring");
+					continue;
+				}
+				
 				Lw.d(TAG, "Package name is " + packageName);
 
 				PackageSettings.Package pkg = pkgSettings.getPackage(packageName);
@@ -322,12 +347,37 @@ public class NotificationReceiverService extends NotificationListenerService imp
 		if (cntHandledNotifications != 0)
 		{
 			Lw.d(TAG, "(Re)Setting alarm with interval " + minReminderInterval + " seconds");
-			alarm.setAlarmMillis(this,  minReminderInterval * 1000);	
+			alarm.setAlarmMillis(this,  minReminderInterval * 1000);
+			
+			if ( ( GlobalState.getLastCountHandledNotifications(this) != cntHandledNotifications ) && 
+					settings.isOngoingNotificationEnabled()) 
+			{
+				GlobalState.setLastCountHandledNotifications(this, cntHandledNotifications);
+				OngoingNotificationManager.showUpdateOngoingNotification(this);
+			}
+		}
+		else if (GlobalState.getIsMuted(this)) // if we are muted - always show the notification also
+		{
+			Lw.d(TAG, "Nothing to notify about, cancelling alarm, if any, but setting notification since we are muted");
+			alarm.cancelAlarm(this);			
+
+			if ( ( GlobalState.getLastCountHandledNotifications(this) != cntHandledNotifications ) && 
+					settings.isOngoingNotificationEnabled()) 
+			{
+				GlobalState.setLastCountHandledNotifications(this, 0);
+				OngoingNotificationManager.showUpdateOngoingNotification(this);
+			}
 		}
 		else
 		{
 			Lw.d(TAG, "Nothing to notify about, cancelling alarm, if any");
 			alarm.cancelAlarm(this);
+
+			if ( GlobalState.getLastCountHandledNotifications(this) != 0)
+			{
+				GlobalState.setLastCountHandledNotifications(this, 0);
+				OngoingNotificationManager.cancelOngoingNotification(this);
+			}
 		}
 	}
 

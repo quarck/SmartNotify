@@ -84,6 +84,12 @@ public class Alarm extends BroadcastReceiver
 				Lw.d(TAG, "Was going to fire the reminder, but call is currently in progress. Would skip this one.");
 				fireReminder = false;
 			}
+			
+			if (fireReminder && GlobalState.getIsMuted(context))
+			{
+				Lw.d(TAG, "Service is enabled, but muted, not firing");
+				fireReminder = false;
+			}
 
 			long currentTime = System.currentTimeMillis();
 			long lastFireTime = GlobalState.getLastFireTime(context);

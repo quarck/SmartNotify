@@ -41,6 +41,8 @@ public class Settings
 	private static final String IS_ENABLED_KEY = "pref_key_is_enabled";
 	private static final String VIBRATION_PATTERN_KEY = "pref_key_vibration_pattern";
 	private static final String RINGTONE_KEY = "pref_key_ringtone";
+	
+	private static final String ONGOING_NOTIFICATION_KEY = "pref_key_enable_ongoing_notification";
 
 	// number of minutes since 00:00:00 
 	private static final String SILENCE_FROM_KEY = "pref_key_time_silence_from"; 
@@ -81,6 +83,19 @@ public class Settings
 	public boolean isServiceEnabled()
 	{
 		return prefs.getBoolean(IS_ENABLED_KEY, false);
+	}
+
+
+	public void setOngoingNotification(boolean value)
+	{
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(ONGOING_NOTIFICATION_KEY, value);
+		editor.commit();
+	}
+
+	public boolean isOngoingNotificationEnabled()
+	{
+		return prefs.getBoolean(ONGOING_NOTIFICATION_KEY, true);
 	}
 
 	public void setSilencePeriod(int from, int to)

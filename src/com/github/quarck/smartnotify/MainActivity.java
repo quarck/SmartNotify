@@ -361,11 +361,14 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 
 		super.onResume();
 		
+		OngoingNotificationManager.updateNotification(this);
+		
 		synchronized(this)
 		{
 			listApplicationsLoader = new LoadPackagesTask();
 			listApplicationsLoader.execute();
 		}
+		
 	}
 
 	@Override

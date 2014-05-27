@@ -51,7 +51,13 @@
             android:summary=""            
             android:title="Notification tone"
             android:ringtoneType="notification" />
-                
+
+        <CheckBoxPreference
+            android:key="pref_key_enable_ongoing_notification"
+            android:summary="Display ongoing notification when SmartNotify is active"
+            android:title="Display ongoing notification"
+            android:defaultValue="true"  />
+        
     </PreferenceCategory>
     
     
