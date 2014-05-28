@@ -37,7 +37,7 @@ public class OngoingNotificationManager
 		Notification ongoingNotification = new Notification.Builder(ctx)
 				//.setContentTitle("SmartNotify is active")
 	         .setContent(view)
-	         .setSmallIcon(R.drawable.ic_launcher)
+	         .setSmallIcon(R.drawable.ic_notification)
 	         .setOngoing(true)
 	         .setPriority(Notification.PRIORITY_MIN)
 	         .setContentIntent(pendingMainActivityIntent)
@@ -64,6 +64,5 @@ public class OngoingNotificationManager
 		{
 			cancelOngoingNotification(ctx);
 		}
-		
 	}
 }

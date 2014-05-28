@@ -260,8 +260,10 @@ public class EditApplicationsActivity extends Activity
 			asi.packageName = appInfo.packageName;
 
 			asi.name = packageManager.getApplicationLabel(appInfo).toString();
-			asi.app = appInfo;					
-			commonApps.add(asi);
+			asi.app = appInfo;
+			
+			if (asi.packageName.equals(Consts.packageName))
+				commonApps.add(asi);
 			alreadyLoadedAppsHash.put(asi.packageName, 1);
 		}
 

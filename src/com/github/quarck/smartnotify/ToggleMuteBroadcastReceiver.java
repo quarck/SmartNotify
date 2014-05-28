@@ -1,7 +1,6 @@
 package com.github.quarck.smartnotify;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 
