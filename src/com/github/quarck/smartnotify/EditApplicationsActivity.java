@@ -266,7 +266,6 @@ public class EditApplicationsActivity extends Activity
 				commonApps.add(asi);
 			alreadyLoadedAppsHash.put(asi.packageName, 1);
 		}
-
 				
 		if (!onlyRefreshRecent)
 		{

@@ -5,6 +5,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.widget.RemoteViews;
 
 public class OngoingNotificationManager
@@ -23,7 +25,6 @@ public class OngoingNotificationManager
 		
 		Intent mainActivityIntent = new Intent(ctx, MainActivity.class);
 		PendingIntent pendingMainActivityIntent = PendingIntent.getActivity(ctx, 0, mainActivityIntent, 0);
-
 		
 		RemoteViews view = new RemoteViews(ctx.getPackageName(), 
 				!GlobalState.getIsMuted(ctx) ? R.layout.notification_view : R.layout.notification_view_muted);	
@@ -31,7 +32,22 @@ public class OngoingNotificationManager
 		view.setOnClickPendingIntent(R.id.buttonMute, pendingIntent);
 		if (!GlobalState.getIsMuted(ctx))
 		{
-			view.setTextViewText(R.id.textViewSmallText, "" + GlobalState.getLastCountHandledNotifications(ctx) + " notification(s) active");
+			int cntActive = GlobalState.getLastCountHandledNotifications(ctx);
+			long intervalMin = GlobalState.getCurrentRemindInterval(ctx)/60/1000; 
+					
+			StringBuilder sb = new StringBuilder();
+			
+			sb.append(cntActive);
+			sb.append(" app");
+			if (cntActive != 1) 
+				sb.append("s");
+			sb.append(", every ");
+			sb.append(intervalMin);
+			sb.append(" min");
+			if (intervalMin != 1)
+				sb.append("s");
+			
+			view.setTextViewText(R.id.textViewSmallText, sb.toString() );
 		}
 		
 		Notification ongoingNotification = new Notification.Builder(ctx)
@@ -44,13 +60,13 @@ public class OngoingNotificationManager
 	         .build();
 	
 		((NotificationManager)ctx.getSystemService(Context.NOTIFICATION_SERVICE))
-			.notify(0, ongoingNotification); // would update if already exists
+			.notify(Consts.notificationIdOngoing, ongoingNotification); // would update if already exists
 	}
 	
 	public static void cancelOngoingNotification(Context ctx)
 	{
 		((NotificationManager)ctx.getSystemService(Context.NOTIFICATION_SERVICE))
-			.cancel(0);
+			.cancel(Consts.notificationIdOngoing);
 	}
 
 	public static void updateNotification(Context ctx)

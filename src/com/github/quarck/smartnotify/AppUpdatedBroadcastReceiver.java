@@ -30,6 +30,6 @@ public class AppUpdatedBroadcastReceiver extends BroadcastReceiver
 			.build();
 	
 		((NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE))
-			.notify(10, notification); // would update if already exists
+			.notify(Consts.notificationIdUpdated, notification); // would update if already exists
 	}
 }
