@@ -44,7 +44,7 @@ public class TimePickerPreference extends DialogPreference
 	
 	TimePicker picker = null;
 
-	String clockType = null;
+	boolean is24hr = true;
 	
 	public TimePickerPreference(Context context, AttributeSet attrs)
 	{
@@ -55,9 +55,17 @@ public class TimePickerPreference extends DialogPreference
 		setNegativeButtonText(android.R.string.cancel);
 		setDialogIcon(null);
 
-		clockType = Settings.System.getString(context.getContentResolver(), Settings.System.TIME_12_24);
+		String clockType = Settings.System.getString(context.getContentResolver(), Settings.System.TIME_12_24);
 		
-		Lw.d("SMART_NOTIFY_LOG_TYPE_IS " + clockType);
+		if (clockType != null)
+		{
+			Lw.d("SMART_NOTIFY_LOG_TYPE_IS " + clockType);
+			is24hr = (clockType.compareTo("24") == 0);
+		}
+		else 
+		{
+			Lw.d("SMART_NOTIFY_LOG_TYPE_IS is unknown");
+		}
 	}
 	
 	@Override
@@ -69,7 +77,7 @@ public class TimePickerPreference extends DialogPreference
 		
 		if (picker != null)
 		{
-			picker.setIs24HourView(clockType.compareTo("24") == 0);
+			picker.setIs24HourView(is24hr);
 			picker.setCurrentHour(timeValue / 60);
 			picker.setCurrentMinute(timeValue % 60);
 		}

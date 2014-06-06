@@ -5,8 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.widget.RemoteViews;
 
 public class OngoingNotificationManager
@@ -38,15 +36,17 @@ public class OngoingNotificationManager
 			StringBuilder sb = new StringBuilder();
 			
 			sb.append(cntActive);
-			sb.append(" app");
 			if (cntActive != 1) 
-				sb.append("s");
-			sb.append(", every ");
+				sb.append(ctx.getString(R.string.notification_hint_apps));
+			else
+				sb.append(ctx.getString(R.string.notification_hint_app));
+			sb.append(ctx.getString(R.string.notification_hint_every));
 			sb.append(intervalMin);
-			sb.append(" min");
 			if (intervalMin != 1)
-				sb.append("s");
-			
+				sb.append(ctx.getString(R.string.notification_hint_mins));
+			else
+				sb.append(ctx.getString(R.string.notification_hint_min));
+
 			view.setTextViewText(R.id.textViewSmallText, sb.toString() );
 		}
 		

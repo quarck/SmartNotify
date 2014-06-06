@@ -21,8 +21,8 @@ public class AppUpdatedBroadcastReceiver extends BroadcastReceiver
 		PendingIntent pendingMainActivityIntent = PendingIntent.getActivity(context, 0, mainActivityIntent, 0);
 
 		Notification notification = new Notification.Builder(context)
-			.setContentTitle("SmartNotify updated")
-			.setContentText("Please re-enable SmartNotify")
+			.setContentTitle(context.getString(R.string.app_updated))
+			.setContentText(context.getString(R.string.reenable_app))
 			.setSmallIcon(R.drawable.ic_launcher)
 			.setPriority(Notification.PRIORITY_HIGH)
 			.setContentIntent(pendingMainActivityIntent)

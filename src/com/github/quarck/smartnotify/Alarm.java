@@ -222,7 +222,6 @@ public class Alarm extends BroadcastReceiver
 		alarmManager(context).cancel(sender);
 
 		GlobalState.setCurrentRemindInterval(context,  0);
-//		GlobalState.setNextAlarmTime(context, 0);
 	}
 
 	private AlarmManager alarmManager(Context context)

@@ -26,6 +26,7 @@
 	    android:layout_gravity="center_vertical|center_horizontal|center"
 	    android:layout_weight="55"
 	    android:indeterminate="true"
-	    android:visibility="gone" />
+	    android:visibility="gone"
+	    tools:ignore="InefficientWeight" />
 
 </LinearLayout>

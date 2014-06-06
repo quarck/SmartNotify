@@ -25,7 +25,10 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:layout_marginRight="6dp"
-        android:textSize="18sp" >
+        android:textSize="18sp"
+        android:textOff="@string/off"
+        android:textOn="@string/on"        
+         >
 
     </ToggleButton>
 	

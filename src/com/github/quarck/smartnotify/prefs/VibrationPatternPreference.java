@@ -101,7 +101,7 @@ public class VibrationPatternPreference extends DialogPreference
 	public void onInvalidPattern()
 	{
 		AlertDialog.Builder builder = new AlertDialog.Builder(context);
-		builder.setMessage("Cannot parse pattern").setCancelable(false)
+		builder.setMessage(context.getString(R.string.error_cannot_parse)).setCancelable(false)
 			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int id)

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Smart Notify</string>
+    <string name="hello_world">Привет мир!</string>
+    <string name="action_settings">Настройки</string>
+	<string name="application_has_no_access">Данному приложению требуются специальные права для того, что-бы читать список уведомлений. Открыть системные настройки, для предоставления доступа приложению?</string>
+	<string name="open_settings">Открыть настройки</string>
+	<string name="cancel_quit">Отмена (Выход)</string>
+	<string name="action_edit_applications">Редактировать</string>
+	
+	<string name="hide_btn">Btn</string>
+	<string name="min">мин</string>
+	
+	<string name="notification_service">Сервис уведомлений:</string>
+		
+	<string name="showhideapps">Показать/скрыть приложения:</string>
+	<string name="select_apps">Выберете обрабатываемые приложения:</string>
+	<string name="showhidefootnote">Приложения отображаемые на главном экране:</string>
+	<string name="google_dialer_warning">Внимание: вы пытаетесь добавить Google Dialer. Вы не получите уведомлений о пропущенных звонках. Для получения уведомлений о пропущенных звонках - добавьте приложение \"Phone\".</string>
+	
+	<string name="no_apps">Здесь одиноко.. Откройте \"Редактировать\" что-бы добавить приложения на этот экран</string>
+	
+	<string name="app_icon_content_descr">App Icon</string>
+	
+	<string name="example_app">Example Application</string>
+	
+	<string name="unmute">UnMute</string>
+	<string name="app_muted">SmartNotify Muted</string>
+	
+	<string name="mute">Mute</string>
+	<string name="app_unmuted">SmartNotify</string>
+	
+	<string name="app_updated">SmartNotify обновлен</string>
+	<string name="reenable_app">Пожалуйста, повторно включите SmartNotify</string>
+	
+	<string name="menutitle_handled_apps">ОБРАБАТЫВАЕМЫЕ ПРИЛОЖЕНИЯ</string>
+	<string name="menutitle_recent_notificatoins">НЕДАВНИЕ УВЕДОМЛЕНИЯ</string>
+	<string name="menutitle_common_notifications">РАСПРОСТРАНЕННЫЕ УВЕДОМЛЕНИЯ</string>
+	<string name="menutitle_other_apps">ДРУГИЕ ПРИЛОЖЕНИЯ</string>
+	
+	<string name="notification_hint_app">приложение</string>
+	<string name="notification_hint_apps">приложений</string>
+	<string name="notification_hint_every">, каждые</string>	
+	<string name="notification_hint_min">мин</string>
+	<string name="notification_hint_mins">мин</string>
+
+	<string name="error_cannot_parse">Не удается распарсить паттерн</string>
+	
+	<string name="on">ON</string>
+	<string name="off">OFF</string>
+	
+	<string name="every_nmin_fmt">каждые %1$d мин (click to change)</string>
+</resources>

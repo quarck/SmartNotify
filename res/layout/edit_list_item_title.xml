@@ -12,7 +12,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:gravity="center_vertical"
-        android:text="Example application"
+        android:text="@string/example_app"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginLeft="6dp" />

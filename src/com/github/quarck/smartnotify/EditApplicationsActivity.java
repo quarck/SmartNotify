@@ -63,6 +63,8 @@ public class EditApplicationsActivity extends Activity
 	
 	//private ArrayList<AppSelectionInfo> listApps = new ArrayList<AppSelectionInfo>();
 	
+	private String[] menuTitles = null;
+	
 	private static class Applications
 	{
 		private ArrayList<AppSelectionInfo> handledApps;
@@ -177,7 +179,6 @@ public class EditApplicationsActivity extends Activity
 				onlyRefreshRecent = !forceReloadApplications;
 			forceReloadApplications = false;
 		}
-		
 		
 		PackageSettings pkgSettings = new PackageSettings(this);
 	
@@ -536,14 +537,31 @@ public class EditApplicationsActivity extends Activity
 			return 0;			
 		}
 
+		
+		private String[] getMenuTitles()
+		{
+			synchronized(this)
+			{
+				if (menuTitles == null)
+				{
+					menuTitles = 
+						new String[] 
+						{
+							getString(R.string.menutitle_handled_apps),
+							getString(R.string.menutitle_recent_notificatoins),
+							getString(R.string.menutitle_common_notifications),
+							getString(R.string.menutitle_other_apps)
+						};
+				}
+			}
+			
+			return menuTitles;
+		}
+		
+		
 		public Object getItem(int position)
 		{
-			String[] titles = {
-					"HANDLED APPLICATIONS", 
-					"RECENT NOTIFICATIONS", 
-					"COMMON NOTIFICATIONS",
-					"OTHER APPLICATIONS"
-				};
+			String[] titles = getMenuTitles();
 
 			int titleIdx = 0;
 			for (ArrayList<AppSelectionInfo> list : applications.getAll())

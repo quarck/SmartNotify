@@ -11,12 +11,11 @@
         android:layout_centerVertical="true"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:text="UnMute" />
+        android:text="@string/unmute" />
 
-        
     <TextView
         android:id="@+id/textViewNotificationText"
-        android:text="SmartNotify Muted"
+        android:text="@string/app_muted"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toLeftOf="@+id/buttonMute"
@@ -34,5 +33,7 @@
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
         android:layout_margin="8dp"
-        android:background="@drawable/ic_notification" />
+        android:background="@drawable/ic_notification" 
+        android:contentDescription="@string/app_icon_content_descr"/>
+
 </RelativeLayout>

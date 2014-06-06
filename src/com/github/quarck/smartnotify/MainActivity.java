@@ -439,7 +439,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			picker.setMaxValue(120);
 			picker.setValue(appInfo.pkgInfo.getRemindIntervalSeconds() / 60);
 			
-			alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
+			alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int whichButton)
 				{
@@ -462,7 +462,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 				}
 			});
 
-			alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+			alert.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener()
 			{
 				public void onClick(DialogInterface dialog, int whichButton)
 				{
@@ -528,7 +528,9 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			final ApplicationPkgInfo appInfo = listApplications.get(position); // this would not change as well - why lookup twice then?
 						
 			viewHolder.btnEnableForApp.setChecked( appInfo.pkgInfo.isHandlingThis() );
-			viewHolder.textViewRemindInterval.setText("every " + (appInfo.pkgInfo.getRemindIntervalSeconds() / 60) + " mins (click to change)");
+			
+			String text = String.format(getString(R.string.every_nmin_fmt), (appInfo.pkgInfo.getRemindIntervalSeconds() / 60) ); 
+			viewHolder.textViewRemindInterval.setText(text);
 			
 			if (appInfo.name != null)
 				viewHolder.textViewAppName.setText(appInfo.name);
@@ -563,7 +565,7 @@ public class MainActivity extends Activity implements ServiceClient.Callback
 			ToggleButton btnEnableForApp;
 			TextView textViewRemindInterval;
 			TextView textViewAppName;
-			ImageView imageViewAppIcon;
+			ImageView imageViewAppIcon;			
 		}
 	}
 
