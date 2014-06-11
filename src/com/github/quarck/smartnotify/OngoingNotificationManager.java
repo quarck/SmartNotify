@@ -36,12 +36,15 @@ public class OngoingNotificationManager
 			StringBuilder sb = new StringBuilder();
 			
 			sb.append(cntActive);
+			sb.append(" ");
 			if (cntActive != 1) 
 				sb.append(ctx.getString(R.string.notification_hint_apps));
 			else
 				sb.append(ctx.getString(R.string.notification_hint_app));
 			sb.append(ctx.getString(R.string.notification_hint_every));
+			sb.append(" ");
 			sb.append(intervalMin);
+			sb.append(" ");
 			if (intervalMin != 1)
 				sb.append(ctx.getString(R.string.notification_hint_mins));
 			else
@@ -51,7 +54,6 @@ public class OngoingNotificationManager
 		}
 		
 		Notification ongoingNotification = new Notification.Builder(ctx)
-				//.setContentTitle("SmartNotify is active")
 	         .setContent(view)
 	         .setSmallIcon(R.drawable.ic_notification)
 	         .setOngoing(true)
