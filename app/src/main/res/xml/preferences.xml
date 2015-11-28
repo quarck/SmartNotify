@@ -1,0 +1,64 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory 
+        android:title="Silence Hours"
+        android:key="pref_key_silence">\
+        
+        <CheckBoxPreference
+            android:key="pref_key_enable_silence_hours"
+            android:summary="Select quiet time to not receive any notifications"
+            android:title="Enable Silence Hours"
+            android:defaultValue="false"  />
+	    
+	    <!--  ListPreference
+	        android:dependency="pref_sync"
+	        android:key="pref_syncConnectionType"
+	        android:title="string/pref_syncConnectionType"
+	        android:dialogTitle="string/pref_syncConnectionType"
+	        android:entries="@array/pref_syncConnectionTypes_entries"
+	        android:entryValues="@array/pref_syncConnectionTypes_values"
+	        android:defaultValue="@string/pref_syncConnectionTypes_default" / -->
+	    
+
+        <com.github.quarck.smartnotify.prefs.TimePickerPreference 
+            android:key="pref_key_time_silence_from"
+            android:dependency="pref_key_enable_silence_hours"
+            android:summary=""
+            android:title="Silence from"
+            android:defaultValue="1260"  />
+        
+        <com.github.quarck.smartnotify.prefs.TimePickerPreference 
+            android:key="pref_key_time_silence_to"
+            android:dependency="pref_key_enable_silence_hours"
+            android:summary=""
+            android:title="Silence to"
+            android:defaultValue="330"  />
+        
+    </PreferenceCategory>
+
+     <PreferenceCategory 
+        android:title="Notification"
+        android:key="pref_key_notification">
+        
+
+        <com.github.quarck.smartnotify.prefs.VibrationPatternPreference
+            android:key="pref_key_vibration_pattern"
+            android:summary=""
+            android:title="Vibration pattern"
+            android:defaultValue="0,80,30,100,40,110,50,120,50,150,30,150,150,1500"  />
+        
+        <RingtonePreference 
+            android:key="pref_key_ringtone"
+            android:summary=""            
+            android:title="Notification tone"
+            android:ringtoneType="notification" />
+
+        <CheckBoxPreference
+            android:key="pref_key_enable_ongoing_notification"
+            android:summary="Display ongoing notification when SmartNotify is active"
+            android:title="Display ongoing notification"
+            android:defaultValue="true"  />
+        
+    </PreferenceCategory>
+    
+    
+</PreferenceScreen>
