@@ -25,82 +25,88 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.github.quarck.smartnotify;
+package com.github.quarck.smartnotify
 
-import android.content.Context;
-import android.telephony.PhoneStateListener;
-import android.telephony.TelephonyManager;
+import android.content.Context
+import android.telephony.PhoneStateListener
+import android.telephony.TelephonyManager
 
-public class CallStateTracker extends PhoneStateListener
+class CallStateTracker : PhoneStateListener()
 {
-	private static final String TAG = "CallStateTracker";
-	
-	private static CallStateTracker instance = null;
 
-	private GlobalState global = null;
-	
-	@Override
-	public void onCallStateChanged(int state, String incomingNumber)
+	private var global: GlobalState? = null
+
+	override fun onCallStateChanged(state: Int, incomingNumber: String?)
 	{
-		boolean isOnCall = false;
-		
-		Lw.d(TAG, "onCallStateChanged, new state: " + state );
-		
-		switch (state)
+		var isOnCall = false
+
+		Lw.d(TAG, "onCallStateChanged, new state: " + state)
+
+		when (state)
 		{
-		case TelephonyManager.CALL_STATE_RINGING:
-			isOnCall = true;
-			Lw.d(TAG, "CALL_STATE_RINGING");
-			break;
-		case TelephonyManager.CALL_STATE_OFFHOOK:
-			isOnCall = true;
-			Lw.d(TAG, "CALL_STATE_OFFHOOK");
-			break;
-			
-		case TelephonyManager.CALL_STATE_IDLE:
-			isOnCall = false;
-			Lw.d(TAG, "CALL_STATE_IDLE");
-			break;
+			TelephonyManager.CALL_STATE_RINGING ->
+			{
+				isOnCall = true
+				Lw.d(TAG, "CALL_STATE_RINGING")
+			}
+			TelephonyManager.CALL_STATE_OFFHOOK ->
+			{
+				isOnCall = true
+				Lw.d(TAG, "CALL_STATE_OFFHOOK")
+			}
+
+			TelephonyManager.CALL_STATE_IDLE ->
+			{
+				isOnCall = false
+				Lw.d(TAG, "CALL_STATE_IDLE")
+			}
 		}
 
 		if (incomingNumber != null)
-			Lw.d(TAG, "incomingNumber = " + incomingNumber);
+			Lw.d(TAG, "incomingNumber = " + incomingNumber)
 
 		if (global != null)
-			global.setIsOnCall(isOnCall);
+			global!!.isOnCall = isOnCall
 		else
-			Lw.e(TAG, "Can't access global state");
+			Lw.e(TAG, "Can't access global state")
 
 	}
-	
-	private void register(Context ctx)
+
+	private fun register(ctx: Context)
 	{
-		Lw.d(TAG, "Registering listener");
-		
-		TelephonyManager tm = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
-		tm.listen(this, PhoneStateListener.LISTEN_CALL_STATE);
-		
-		global = GlobalState.instance(ctx);
+		Lw.d(TAG, "Registering listener")
+
+		val tm = ctx.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+		tm.listen(this, PhoneStateListener.LISTEN_CALL_STATE)
+
+		global = GlobalState.instance(ctx)
 	}
 
 	@SuppressWarnings("unused")
-	private void unregister(Context ctx)
+	private fun unregister(ctx: Context)
 	{
-		Lw.d(TAG, "Unregistering listener");
-		
-		TelephonyManager tm = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
-		tm.listen(this, PhoneStateListener.LISTEN_NONE);
+		Lw.d(TAG, "Unregistering listener")
+
+		val tm = ctx.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+		tm.listen(this, PhoneStateListener.LISTEN_NONE)
 	}
-	
-	public static void start(Context ctx)
+
+	companion object
 	{
-		Lw.d(TAG, "start()");
-		synchronized(CallStateTracker.class)
+		private val TAG = "CallStateTracker"
+
+		private var instance: CallStateTracker? = null
+
+		fun start(ctx: Context)
 		{
-			if (instance == null)
-				instance = new CallStateTracker();
-			
-			instance.register(ctx);			
+			Lw.d(TAG, "start()")
+			synchronized (CallStateTracker::class.java)
+			{
+				if (instance == null)
+					instance = CallStateTracker()
+
+				instance!!.register(ctx)
+			}
 		}
 	}
 }

@@ -25,96 +25,92 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.github.quarck.smartnotify.prefs;
+package com.github.quarck.smartnotify.prefs
 
-import com.github.quarck.smartnotify.Lw;
-import com.github.quarck.smartnotify.R;
+import com.github.quarck.smartnotify.Lw
+import com.github.quarck.smartnotify.R
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.preference.DialogPreference;
-import android.provider.Settings;
-import android.util.AttributeSet;
-import android.view.View;
-import android.widget.TimePicker;
+import android.content.Context
+import android.content.res.TypedArray
+import android.preference.DialogPreference
+import android.provider.Settings
+import android.util.AttributeSet
+import android.view.View
+import android.widget.TimePicker
 
-public class TimePickerPreference extends DialogPreference
+class TimePickerPreference(context: Context, attrs: AttributeSet) : DialogPreference(context, attrs)
 {
-	int timeValue = 0;
-	
-	TimePicker picker = null;
+	internal var timeValue = 0
 
-	boolean is24hr = true;
-	
-	public TimePickerPreference(Context context, AttributeSet attrs)
+	internal var picker: TimePicker? = null
+
+	internal var is24hr = true
+
+	init
 	{
-		super(context, attrs);
 
-		setDialogLayoutResource(R.layout.dlg_pref_time_picker);
-		setPositiveButtonText(android.R.string.ok);
-		setNegativeButtonText(android.R.string.cancel);
-		setDialogIcon(null);
+		dialogLayoutResource = R.layout.dlg_pref_time_picker
+		setPositiveButtonText(android.R.string.ok)
+		setNegativeButtonText(android.R.string.cancel)
+		dialogIcon = null
 
-		String clockType = Settings.System.getString(context.getContentResolver(), Settings.System.TIME_12_24);
-		
+		val clockType = Settings.System.getString(context.contentResolver, Settings.System.TIME_12_24)
+
 		if (clockType != null)
 		{
-			Lw.d("SMART_NOTIFY_LOG_TYPE_IS " + clockType);
-			is24hr = (clockType.compareTo("24") == 0);
+			Lw.d("SMART_NOTIFY_LOG_TYPE_IS " + clockType)
+			is24hr = (clockType.compareTo("24") == 0)
 		}
-		else 
+		else
 		{
-			Lw.d("SMART_NOTIFY_LOG_TYPE_IS is unknown");
-		}
-	}
-	
-	@Override
-	protected void onBindDialogView (View view)
-	{
-		super.onBindDialogView(view);
-		
-		picker = (TimePicker)view.findViewById(R.id.timePickerTime);
-		
-		if (picker != null)
-		{
-			picker.setIs24HourView(is24hr);
-			picker.setCurrentHour(timeValue / 60);
-			picker.setCurrentMinute(timeValue % 60);
+			Lw.d("SMART_NOTIFY_LOG_TYPE_IS is unknown")
 		}
 	}
 
-	protected void onDialogClosed(boolean positiveResult)
+	override fun onBindDialogView(view: View)
+	{
+		super.onBindDialogView(view)
+
+		picker = view.findViewById(R.id.timePickerTime) as TimePicker
+
+		if (picker != null)
+		{
+			picker!!.setIs24HourView(is24hr)
+			picker!!.currentHour = timeValue / 60
+			picker!!.currentMinute = timeValue % 60
+		}
+	}
+
+	override fun onDialogClosed(positiveResult: Boolean)
 	{
 		// When the user selects "OK", persist the new value
 		if (positiveResult)
 		{
 			if (picker != null)
 			{
-				timeValue = picker.getCurrentHour() * 60 + picker.getCurrentMinute();
-				persistInt(timeValue);
-			}			
+				timeValue = picker!!.currentHour * 60 + picker!!.currentMinute
+				persistInt(timeValue)
+			}
 		}
 	}
 
-	@Override
-	protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue)
+	override fun onSetInitialValue(restorePersistedValue: Boolean, defaultValue: Any)
 	{
 		if (restorePersistedValue)
 		{
 			// Restore existing state
-			timeValue = this.getPersistedInt(0);
+			timeValue = this.getPersistedInt(0)
 		}
 		else
 		{
 			// Set default state from the XML attribute
-			timeValue = (Integer) defaultValue;
-			persistInt(timeValue);
+			timeValue = defaultValue as Int
+			persistInt(timeValue)
 		}
 	}
 
-	@Override
-	protected Object onGetDefaultValue(TypedArray a, int index) 
+	override fun onGetDefaultValue(a: TypedArray, index: Int): Any
 	{
-	    return a.getInteger(index, 0);
-	}	
+		return a.getInteger(index, 0)
+	}
 }

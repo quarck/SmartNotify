@@ -25,61 +25,32 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.github.quarck.smartnotify;
 
-import java.util.Calendar;
+package com.github.quarck.smartnotify
 
-public class SilentPeriodManager
+import android.util.Log
+
+object Lw
 {
-	private static final String TAG = "SilentPeriodManager";
-	
-	public static boolean isEnabled(Settings settings)
+	private val TAG_PREFIX = "SmartNotify "
+
+	fun d(TAG: String, message: String)
 	{
-		return settings.isSilencePeriodEnabled() && settings.hasSilencePeriod();
+		Log.d(TAG_PREFIX + TAG, "" + System.currentTimeMillis() + " " + message)
 	}
 
-	// returns time in millis, when silent period ends, 
-	// or 0 if we are not on silent 
-	public static long getSilentUntil(Settings settings)
+	fun d(message: String)
 	{
-		if (!isEnabled(settings))
-			return 0;
-		
-		long ret = 0;
-		
-		Calendar cal = Calendar.getInstance();
-		int hour = cal.get(Calendar.HOUR_OF_DAY);
-		int minute = cal.get(Calendar.MINUTE);
-		int currentTm = hour * 60 + minute;
-
-		int silenceFrom = settings.getSilenceFrom();
-		int silenceTo = settings.getSilenceTo();
-
-		Lw.d(TAG, "have silent period from " + silenceFrom + " to " + silenceTo);
-		Lw.d(TAG, "Current time is " + currentTm);
-
-		if (silenceTo < silenceFrom)
-			silenceTo += 24 * 60;
-
-		if ( inRange(currentTm, silenceFrom, silenceTo)
-			|| inRange(currentTm+24*60, silenceFrom, silenceTo))
-		{
-			long silentLenghtMins = (silenceTo + 24*60 - currentTm) % (24*60);
-			
-			ret = System.currentTimeMillis() + silentLenghtMins * 60 * 1000; // convert minutes to milliseconds
-
-			Lw.d(TAG, "We are in the silent zone until " + ret + " (it is " + silentLenghtMins + " minutes from now)");
-		}
-		else
-		{
-			Lw.d(TAG, "We are not in the silent mode");		
-		}
-		
-		return ret;
+		d("<NOTAG>", message)
 	}
-	
-	private static boolean inRange(int value, int low, int high)
+
+	fun e(TAG: String, message: String)
 	{
-		return (low <= value && value <= high);
+		Log.e(TAG_PREFIX + TAG, "" + System.currentTimeMillis() + " " + message)
+	}
+
+	fun e(message: String)
+	{
+		e("<NOTAG>", message)
 	}
 }

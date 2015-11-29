@@ -25,18 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.github.quarck.smartnotify;
+package com.github.quarck.smartnotify
 
-import android.os.Bundle;
-import android.preference.PreferenceActivity;
+import android.os.Bundle
+import android.preference.PreferenceActivity
 
-public class SettingsActivity extends PreferenceActivity
+class SettingsActivity : PreferenceActivity()
 {
 	@SuppressWarnings("deprecation")
-	@Override
-	public void onCreate(Bundle savedInstanceState)
+	public override fun onCreate(savedInstanceState: Bundle?)
 	{
-		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.preferences);
+		super.onCreate(savedInstanceState)
+		addPreferencesFromResource(R.xml.preferences)
 	}
 }

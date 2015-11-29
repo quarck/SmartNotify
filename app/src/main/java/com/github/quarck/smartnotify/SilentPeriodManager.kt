@@ -25,32 +25,60 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package com.github.quarck.smartnotify
 
-package com.github.quarck.smartnotify;
+import java.util.Calendar
 
-import android.util.Log;
-
-public class Lw
+object SilentPeriodManager
 {
-	private final static String TAG_PREFIX = "SmartNotify ";
+	private val TAG = "SilentPeriodManager"
 
-	public static void d(String TAG, String message)
+	fun isEnabled(settings: Settings): Boolean
 	{
-		Log.d(TAG_PREFIX + TAG, "" + System.currentTimeMillis() + " " + message);
-	}
-	
-	public static void d(String message)
-	{
-		d("<NOTAG>", message);
+		return settings.isSilencePeriodEnabled && settings.hasSilencePeriod()
 	}
 
-	public static void e(String TAG, String message)
+	// returns time in millis, when silent period ends, 
+	// or 0 if we are not on silent 
+	fun getSilentUntil(settings: Settings): Long
 	{
-		Log.e(TAG_PREFIX + TAG, "" + System.currentTimeMillis() + " " + message);
+		if (!isEnabled(settings))
+			return 0
+
+		var ret: Long = 0
+
+		val cal = Calendar.getInstance()
+		val hour = cal.get(Calendar.HOUR_OF_DAY)
+		val minute = cal.get(Calendar.MINUTE)
+		val currentTm = hour * 60 + minute
+
+		val silenceFrom = settings.silenceFrom
+		var silenceTo = settings.silenceTo
+
+		Lw.d(TAG, "have silent period from $silenceFrom to $silenceTo")
+		Lw.d(TAG, "Current time is " + currentTm)
+
+		if (silenceTo < silenceFrom)
+			silenceTo += 24 * 60
+
+		if (inRange(currentTm, silenceFrom, silenceTo) || inRange(currentTm + 24 * 60, silenceFrom, silenceTo))
+		{
+			val silentLenghtMins = ((silenceTo + 24 * 60 - currentTm) % (24 * 60)).toLong()
+
+			ret = System.currentTimeMillis() + silentLenghtMins * 60 * 1000 // convert minutes to milliseconds
+
+			Lw.d(TAG, "We are in the silent zone until $ret (it is $silentLenghtMins minutes from now)")
+		}
+		else
+		{
+			Lw.d(TAG, "We are not in the silent mode")
+		}
+
+		return ret
 	}
 
-	public static void e(String message)
+	private fun inRange(value: Int, low: Int, high: Int): Boolean
 	{
-		e("<NOTAG>", message);
+		return (low <= value && value <= high)
 	}
 }
