@@ -37,7 +37,7 @@ import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
 
-class ServiceClient(private val callback: ServiceClient.Callback?) : Handler.Callback
+class ServiceClient(val callback: Callback?) : Handler.Callback
 {
 
 	private var mService: Messenger? = null
@@ -46,7 +46,7 @@ class ServiceClient(private val callback: ServiceClient.Callback?) : Handler.Cal
 
 	private val mMessenger = Messenger(Handler(this))
 
-	internal interface Callback
+	interface Callback
 	{
 		fun onNoPermissions()
 

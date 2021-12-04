@@ -27,6 +27,7 @@
 
 package com.github.quarck.smartnotify
 
+import android.annotation.SuppressLint
 import java.util.ArrayList
 import java.util.Collections
 import java.util.Comparator
@@ -41,6 +42,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -57,6 +59,7 @@ import android.widget.NumberPicker
 import android.widget.TextView
 import android.widget.Toast
 import android.widget.ToggleButton
+import org.jetbrains.annotations.NotNull
 
 class MainActivity : Activity(), ServiceClient.Callback
 {
@@ -145,8 +148,10 @@ class MainActivity : Activity(), ServiceClient.Callback
 
 			(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(Consts.notificationIdUpdated)
 
-			if (serviceEnabled)
-				serviceClient!!.checkPermissions()
+			if (serviceEnabled) {
+				val intent = Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+				startActivity(intent)
+			}
 		}
 
 		toggleButtonEnableService!!.setOnClickListener(saveSettingsOnClickListener)
@@ -156,6 +161,61 @@ class MainActivity : Activity(), ServiceClient.Callback
 	{
 		menuInflater.inflate(R.menu.main, menu)
 		return true
+	}
+
+	@SuppressLint("BatteryLife")
+	private fun checkPermissions() {
+		val hasPermissions = PermissionsManager.hasAllPermissions(this)
+
+		if (!hasPermissions) {
+			if (PermissionsManager.shouldShowRationale(this)) {
+				AlertDialog.Builder(this)
+					.setMessage(R.string.application_has_no_access)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok) {
+							_, _ ->
+						PermissionsManager.requestPermissions(this)
+					}
+					.setNegativeButton(getString(R.string.exit)) {
+							_, _ ->
+						this@MainActivity.finish()
+					}
+					.create()
+					.show()
+			}
+			else {
+				PermissionsManager.requestPermissions(this)
+			}
+		}
+		else {
+			// if we have essential permissions - now check for power manager optimisations
+			if (!powerManager.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID)) {
+				AlertDialog.Builder(this)
+					.setTitle(getString(R.string.ignore_batter_optimisations_title))
+					.setMessage(getString(R.string.ignore_batter_optimisations_details))
+					.setPositiveButton(getString(R.string.ignore_batter_optimisations_yes)) {
+							_, _ ->
+						val intent = Intent()
+							.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+							.setData(Uri.parse("package:" + BuildConfig.APPLICATION_ID))
+						startActivity(intent)
+					}
+					.setNeutralButton(getString(R.string.ignore_batter_optimisations_later)) {
+							_, _ ->
+					}
+					.create()
+					.show()
+			}
+
+		}
+	}
+
+	override fun onRequestPermissionsResult(requestCode: Int, @NotNull permissions: Array<out String>, @NotNull grantResults: IntArray) {
+//		for (result in grantResults) {
+//			if (result != PackageManager.PERMISSION_GRANTED) {
+//				DevLog.error(LOG_TAG, "Permission is not granted!")
+//			}
+//		}
 	}
 
 	override fun onOptionsItemSelected(item: MenuItem): Boolean
@@ -185,7 +245,7 @@ class MainActivity : Activity(), ServiceClient.Callback
 			.setCancelable(false)
 			.setPositiveButton(R.string.open_settings) {
 				x, y ->
-					val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+					val intent = Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
 					startActivity(intent)
 				}
 			.setNegativeButton(R.string.cancel_quit) {
@@ -235,7 +295,7 @@ class MainActivity : Activity(), ServiceClient.Callback
 			{
 				try
 				{
-					val pmAppInfo = packageManager.getApplicationInfo(pkg.packageName, PackageManager.GET_META_DATA)
+					val pmAppInfo = packageManager.getApplicationInfo(pkg.packageName ?: "", PackageManager.GET_META_DATA)
 					val icon = pmAppInfo.loadIcon(packageManager)
 					var name = packageManager.getApplicationLabel(pmAppInfo).toString()
 
@@ -337,6 +397,8 @@ class MainActivity : Activity(), ServiceClient.Callback
 		Lw.d(TAG, "onResume")
 
 		super.onResume()
+
+	//	checkPermissions()
 
 		OngoingNotificationManager.updateNotification(this)
 

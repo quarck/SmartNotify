@@ -40,9 +40,7 @@ import android.os.Vibrator
 
 class Alarm : BroadcastReceiver()
 {
-
-	override fun onReceive(context: Context, intent: Intent // alarm fired
-	)
+	override fun onReceive(context: Context, intent: Intent)
 	{
 		Lw.d(TAG, "Alarm received")
 
@@ -178,23 +176,23 @@ class Alarm : BroadcastReceiver()
 	{
 		Lw.d(TAG, "Setting alarm with repeation interval $repeatMillis milliseconds")
 
-		if (GlobalState.getCurrentRemindInterval(context) != repeatMillis as Long)
+		if (GlobalState.getCurrentRemindInterval(context) != repeatMillis.toLong())
 		{
 			Lw.d(TAG, "Cancelling previous alarm since interval has changed or new alarm has been introduced")
 			val cancelIntent = Intent(context, Alarm::class.java)
-			val sender = PendingIntent.getBroadcast(context, 0, cancelIntent, 0)
+			val sender = PendingIntent.getBroadcast(context, 0, cancelIntent, PendingIntent.FLAG_IMMUTABLE)
 
 			alarmManager(context).cancel(sender)
 
 			Lw.d(TAG, "Setting up new alarm with interval " + repeatMillis)
 
 			val intent = Intent(context, Alarm::class.java)
-			val pendIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+			val pendIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
 			alarmManager(context).setRepeating(AlarmManager.RTC_WAKEUP,
-				System.currentTimeMillis() + repeatMillis, repeatMillis, pendIntent)
+				System.currentTimeMillis() + repeatMillis, repeatMillis.toLong(), pendIntent)
 
-			GlobalState.setCurrentRemindInterval(context, repeatMillis)
+			GlobalState.setCurrentRemindInterval(context, repeatMillis.toLong())
 		}
 		else
 		{
@@ -206,7 +204,7 @@ class Alarm : BroadcastReceiver()
 	{
 		Lw.d(TAG, "Cancelling alarm")
 		val intent = Intent(context, Alarm::class.java)
-		val sender = PendingIntent.getBroadcast(context, 0, intent, 0)
+		val sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
 		alarmManager(context).cancel(sender)
 

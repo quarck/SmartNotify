@@ -51,5 +51,10 @@
 	<string name="off">OFF</string>
 	
 	<string name="every_nmin_fmt">every %1$d mins (click to change)</string>
+    <string name="exit">Exit</string>
+    <string name="ignore_batter_optimisations_title">Allow to ignore battery optimisations?</string>
+	<string name="ignore_batter_optimisations_details">This is required in order to avoid missing notifications</string>
+	<string name="ignore_batter_optimisations_yes">Yes, please</string>
+	<string name="ignore_batter_optimisations_later">Later</string>
 
 </resources>

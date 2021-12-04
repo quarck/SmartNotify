@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.github.quarck.smartnotify"
     android:versionCode="9"
     android:versionName="1.0.8" >
 
 
-    <uses-sdk
-        android:minSdkVersion="18"
-        android:targetSdkVersion="19" />
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:name="com.github.quarck.smartnotify.GlobalState"
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/ic_circle_notifications_black_48dp"
+        android:roundIcon="@drawable/ic_circle_notifications_black_48dp"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"  >
         <activity	
             android:name="com.github.quarck.smartnotify.MainActivity"
-            android:label="@string/app_name"  >
+            android:label="@string/app_name"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -29,7 +31,8 @@
 
         <activity	
             android:name="com.github.quarck.smartnotify.EditApplicationsActivity"
-            android:label="@string/app_name" 
+            android:label="@string/app_name"
+            android:exported="true"
             android:parentActivityName="com.github.quarck.smartnotify.MainActivity" >
             
             <meta-data
@@ -39,7 +42,8 @@
 
         <activity	
             android:name="com.github.quarck.smartnotify.SettingsActivity"
-            android:label="@string/app_name" 
+            android:label="@string/app_name"
+            android:exported="true"
             android:parentActivityName="com.github.quarck.smartnotify.MainActivity" >
             
             <meta-data
@@ -49,18 +53,20 @@
         
         <service android:name="com.github.quarck.smartnotify.NotificationReceiverService"
                  android:label="@string/app_name"
-                 android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" >
+                 android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+                 android:exported="true">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service> 
         
         <receiver android:name=".Alarm"
-                  android:enabled="true" /> 
+                  android:enabled="true"
+            android:exported="true"/>
         
-        <receiver android:name=".ToggleMuteBroadcastReceiver"/>
+        <receiver android:name=".ToggleMuteBroadcastReceiver" android:exported="true"/>
 
-        <receiver android:name=".AppUpdatedBroadcastReceiver">
+        <receiver android:name=".AppUpdatedBroadcastReceiver" android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
 			</intent-filter>

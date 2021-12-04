@@ -12,7 +12,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginRight="6dip"
         android:contentDescription="@string/app_icon_content_descr"
-        android:src="@drawable/ic_launcher" />
+        android:src="@drawable/ic_circle_notifications_black_48dp" />
     
     <ToggleButton
         android:id="@+id/toggleButtonEnableForApp"

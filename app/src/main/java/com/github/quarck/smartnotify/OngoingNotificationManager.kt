@@ -19,10 +19,10 @@ object OngoingNotificationManager
 
 		val intent = Intent(ctx, ToggleMuteBroadcastReceiver::class.java)
 		val pendingIntent = PendingIntent.getBroadcast(ctx, 0, intent,
-			PendingIntent.FLAG_UPDATE_CURRENT)
+			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
 		val mainActivityIntent = Intent(ctx, MainActivity::class.java)
-		val pendingMainActivityIntent = PendingIntent.getActivity(ctx, 0, mainActivityIntent, 0)
+		val pendingMainActivityIntent = PendingIntent.getActivity(ctx, 0, mainActivityIntent, PendingIntent.FLAG_IMMUTABLE)
 
 		val view = RemoteViews(ctx.packageName,
 			if (!GlobalState.getIsMuted(ctx)) R.layout.notification_view else R.layout.notification_view_muted)
@@ -53,7 +53,7 @@ object OngoingNotificationManager
 			view.setTextViewText(R.id.textViewSmallText, sb.toString())
 		}
 
-		val ongoingNotification = Notification.Builder(ctx).setContent(view).setSmallIcon(R.drawable.ic_notification).setOngoing(true).setPriority(Notification.PRIORITY_MIN).setContentIntent(pendingMainActivityIntent).build()
+		val ongoingNotification = Notification.Builder(ctx).setContent(view).setSmallIcon(R.drawable.ic_circle_notifications_black_48dp).setOngoing(true).setPriority(Notification.PRIORITY_MIN).setContentIntent(pendingMainActivityIntent).build()
 
 		(ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(Consts.notificationIdOngoing, ongoingNotification) // would update if already exists
 	}

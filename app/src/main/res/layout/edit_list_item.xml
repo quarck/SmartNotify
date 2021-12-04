@@ -29,7 +29,7 @@
         android:layout_marginLeft="6dp"
         android:layout_toRightOf="@+id/checkBoxShowApp"
         android:contentDescription="@string/app_icon_content_descr"
-        android:src="@drawable/ic_launcher" />
+        android:src="@drawable/ic_circle_notifications_black_48dp" />
     
     <TextView
         android:id="@+id/textViewAppName"

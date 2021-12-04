@@ -108,7 +108,7 @@ class Settings(ctx: Context)
 			val patternStr = prefs!!.getString(VIBRATION_PATTERN_KEY,
 				defaultVibrationPatternStr)
 
-			val pattern = parseVibrationPattern(patternStr)
+			val pattern = parseVibrationPattern(patternStr ?: "")
 
 			if (pattern != null)
 				return pattern
@@ -207,7 +207,7 @@ class Settings(ctx: Context)
 			{
 				val times = pattern.split(",".toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray()
 
-				ret = LongArray(times.size())
+				ret = LongArray(times.size)
 
 				for (idx in times.indices)
 				{

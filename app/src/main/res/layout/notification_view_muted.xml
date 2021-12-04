@@ -33,7 +33,7 @@
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
         android:layout_margin="8dp"
-        android:background="@drawable/ic_notification" 
+        android:background="@drawable/ic_circle_notifications_black_48dp"
         android:contentDescription="@string/app_icon_content_descr"/>
 
 </RelativeLayout>

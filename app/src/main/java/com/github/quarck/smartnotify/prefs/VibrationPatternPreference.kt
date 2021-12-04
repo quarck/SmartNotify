@@ -106,7 +106,7 @@ class VibrationPatternPreference(ctx: Context, attrs: AttributeSet) : DialogPref
 		builder.create().show()
 	}
 
-	override fun onSetInitialValue(restorePersistedValue: Boolean, defaultValue: Any)
+	override fun onSetInitialValue(restorePersistedValue: Boolean, defaultValue: Any?)
 	{
 		if (restorePersistedValue)
 		{
@@ -124,6 +124,6 @@ class VibrationPatternPreference(ctx: Context, attrs: AttributeSet) : DialogPref
 
 	override fun onGetDefaultValue(a: TypedArray, index: Int): Any
 	{
-		return a.getString(index)
+		return a.getString(index)!!
 	}
 }

@@ -94,7 +94,7 @@ class TimePickerPreference(context: Context, attrs: AttributeSet) : DialogPrefer
 		}
 	}
 
-	override fun onSetInitialValue(restorePersistedValue: Boolean, defaultValue: Any)
+	override fun onSetInitialValue(restorePersistedValue: Boolean, defaultValue: Any?)
 	{
 		if (restorePersistedValue)
 		{

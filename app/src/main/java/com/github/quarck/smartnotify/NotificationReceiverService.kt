@@ -107,7 +107,7 @@ class NotificationReceiverService : NotificationListenerService(), Handler.Callb
 		try
 		{
 			val notifications = activeNotifications
-			val `val` = arrayOfNulls<String>(notifications.size())
+			val `val` = arrayOfNulls<String>(notifications.size)
 
 			var idx = 0
 			for (notification in notifications)
@@ -228,7 +228,7 @@ class NotificationReceiverService : NotificationListenerService(), Handler.Callb
 
 		if (notifications != null)
 		{
-			Lw.d(TAG, "Total number of notifications currently active: " + notifications.size())
+			Lw.d(TAG, "Total number of notifications currently active: " + notifications.size)
 
 			for (notification in notifications)
 			{
